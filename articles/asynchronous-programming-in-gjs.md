@@ -3,7 +3,7 @@
 
 Although JavaScript engines use threading behind the scenes, JavaScript programs use a single-threaded event loop. This means that long, synchronous operations can block the event loop from executing other operations until completed. This can cause noticeable hangs in interactive scripts and in the case of a Gnome Shell extension could even lock up the whole desktop.
 
-Since GJS in JavaScript bindings for the Gnome API, we have tools to address this that aren't available in standard JavaScript that we can leverage. We'll introduce GLib's event loop used in GJS, go over some basic Promise usage and briefly cover some of the applications of the Gnome API that relate to asynchronous JavaScript.
+Since GJS is JavaScript bindings for the Gnome API, we have tools to address this that aren't available in standard JavaScript that we can leverage. We'll introduce GLib's event loop used in GJS, go over some basic Promise usage and briefly cover some of the applications of the Gnome API that relate to asynchronous JavaScript.
 
 ## Table of Contents
 

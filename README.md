@@ -4,4 +4,6 @@ Here I plan on sharing code and any other computer related files like SPICE, con
 
 ### Articles
 
-[Asynchronous Programming in GJS](articles/asynchronous-programming-in-gjs.md)
+* **[Asynchronous Programming in GJS](articles/asynchronous-programming-in-gjs.md)**
+
+  A primer on Promises, async/await, threading and the event loop in GJS

@@ -505,7 +505,7 @@ The first thing to do is create a directory for your settings schema and an empt
 
 ```sh
 $ mkdir schemas/
-$ touch demo.gschema.xml
+$ touch org.gnome.shell.extensions.demo.gschema.xml
 ```
 
 Then open the file in your text editor and create a schema describing the settings for your extension:
@@ -513,7 +513,7 @@ Then open the file in your text editor and create a schema describing the settin
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <schemalist>
-  <schema id="org.gnome.Shell.Extensions.Demo" path="/org/gnome/shell/extensions/demo/">
+  <schema id="org.gnome.shell.extensions.demo" path="/org/gnome/shell/extensions/demo/">
     <key name="panel-states" type="a{sb}">
       <default>{}</default>
     </key>

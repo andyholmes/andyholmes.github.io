@@ -260,11 +260,7 @@ enabling Demo version 1
 
 ## Making Changes
 
-Extensions can change the existing UI, add new elements or even modify the behaviour of GNOME Shell.
-
-### Adding UI Elements
-
-Many of the elements in GNOME Shell lile panel buttons, popup menus and notifications are built from reusable classes. Here are a few links to some commonly used elements.
+Extensions can change the existing UI, add new elements or even modify the behaviour of GNOME Shell. Many of the elements in GNOME Shell lile panel buttons, popup menus and notifications are built from reusable classes. Here are a few links to some commonly used elements.
 
 * https://gitlab.gnome.org/GNOME/gnome-shell/blob/3.28.3/js/ui/modalDialog.js
 * https://gitlab.gnome.org/GNOME/gnome-shell/blob/3.28.3/js/ui/panelMenu.js
@@ -278,7 +274,9 @@ const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
 ```
 
-Let's add a button to the panel with a menu to start:
+### Adding UI Elements
+
+Let's start by adding a button to the panel with a menu:
 
 ```js
 'use strict';
@@ -553,6 +551,12 @@ class PanelButton extends PanelMenu.Button {
             settings_schema: gschema.lookup('org.gnome.Shell.Extensions.Demo', true)
         });
         
+        // Watch the settings for changes
+        this._onSettingsChangedId = this.settings.connect(
+            'changed::panel-states',
+            this._onSettingsChanged.bind(this)
+        );
+        
         // Pick an icon
         let icon = new St.Icon({
             gicon: new Gio.ThemedIcon({name: 'face-laugh-symbolic'}),
@@ -594,6 +598,23 @@ class PanelButton extends PanelMenu.Button {
         );
     }
     
+    _onSettingsChanged() {
+        // Load the new settings
+        this.saved = this.settings.get_value('panel-states').deep_unpack();
+        
+        // Restore or reset the panel items
+        for (let name in this.states) {
+            // If we have a saved state, set that
+            if (name in this.saved) {
+                Main.panel.statusArea[name].actor.visible = this.saved[name];
+                
+            // Otherwise restore the original state
+            } else {
+                Main.panel.statusArea[name].actor.visible = this.states[name];
+            }
+        }
+    }
+    
     menuAction(name) {
         log(`${name} menu item activated`);
         
@@ -610,6 +631,9 @@ class PanelButton extends PanelMenu.Button {
     
     // We'll override the destroy() function to revert any changes we make
     destroy() {
+        // Stop watching the settings for changes
+        this.settings.disconnect(this._onSettingsChangedId);
+        
         // Store the panel settings in GSettings
         this.settings.set_value(
             'panel-states',
@@ -730,44 +754,7 @@ $ gnome-shell-extension-prefs demo@andyholmes.github.io
 
 ![Preferences Dialog](https://raw.githubusercontent.com/andyholmes/andyholmes.github.io/master/images/gnome-shell-extension-1-image5.png)
 
-We also want to keep our extension up to date with any changes that happen, so add a signal handler below where we create the GSettings object in `extension.js`:
-
-```js
-// Create a new settings object
-this.settings = new Gio.Settings({
-    settings_schema: gschema.lookup('org.gnome.Shell.Extensions.Demo', true)
-});
-        
-// Watch the settings for changes
-this._onSettingsChangedId = this.settings.connect(
-    'changed::panel-states',
-    this._onSettingsChanged.bind(this)
-);
-        
-// Pick an icon
-let icon = new St.Icon({
-```
-
-And add a callback function to the `PanelButton` class:
-
-```js
-_onSettingsChanged() {
-    // Load the new settings
-    this.saved = this.settings.get_value('panel-states').deep_unpack();
-    
-    // Restore or reset the panel items
-    for (let name in this.states) {
-        // If we have a saved state, set that
-        if (name in this.saved) {
-            Main.panel.statusArea[name].actor.visible = this.saved[name];
-            
-        // Otherwise restore the original state
-        } else {
-            Main.panel.statusArea[name].actor.visible = this.states[name];
-        }
-    }
-}
-```
+The extension should be kept up to date with any changes that happen, because of the signal handler bin `extension.js` watching for changes.
 
 --------------------------------------------------------------------------------
 

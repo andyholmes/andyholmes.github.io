@@ -13,6 +13,11 @@ This is a groundup, no-frills overview of what you need to know to get started. 
    * [`extension.js`](#extensionjs)
    * [`prefs.js`](#prefsjs)
    * [`stylesheet.css`](#stylesheetcss)
+2. [Getting Started](#getting-started)
+   * [`metadata.json` and `extension.js`](#metadatajson-and-extensionjs)
+   * [Basic Debugging](#basic-debugging)
+   * [Enabling the Extension](#enabling-the-extension)
+3. [Adding UI Elements](#adding-ui-elements)
    
 ## Basic Overview
 
@@ -80,7 +85,7 @@ const Me = ExtensionUtils.getCurrentExtension();
 
 // This function is called once when your extension is loaded, not enabled. This
 // is a good time to setup translations or anything else you only do once.
-init() {
+function init() {
     log(`initializing ${Me.metadata.name} version ${Me.metadata.version}`);
 }
 
@@ -89,7 +94,7 @@ init() {
 //
 // This is when you setup any UI for your extension, change existing widgets or
 // modify GNOME Shell's behaviour.
-enabled() {
+function enable() {
     log(`enabling ${Me.metadata.name} version ${Me.metadata.version}`);
 }
 
@@ -98,7 +103,7 @@ enabled() {
 //
 // Anything you created, modifed or setup in enable() MUST be undone here. Not
 // doing so is one of the few ways to have you extension rejected during review!
-disable() {
+function disable() {
     log(`disabling ${Me.metadata.name} version ${Me.metadata.version}`);
 }
 ```
@@ -139,7 +144,6 @@ It's important to understand that while the code in `extension.js` is executed i
 
 ### `stylesheet.css`
 
---------------------------------------------------------------------------------
 This is CSS stylesheet which can apply custom styles to your St widgets in `extension.js` or GNOME Shell as a whole. If you had a widget like this:
 
 ```js
@@ -197,3 +201,153 @@ Now we'll do the same for `extension.js`:
 
 [image1]: https://raw.githubusercontent.com/andyholmes/andyholmes.github.io/master/images/gnome-shell-extension-1-image1.png
 [image2]: https://raw.githubusercontent.com/andyholmes/andyholmes.github.io/master/images/gnome-shell-extension-1-image2.png
+
+### Basic Debugging
+
+Now is a good time to cover basic debugging and logging, which is an important part of developing any software. GJS has a number of built in global functions, although not all of them are useful for extensions.
+
+* `log('string')` - Print a string to the log, usually `journald` (log level MESSAGE)
+* `logError(Error, 'optional prefix')` - Print a stack trace for an `Error()` object, with an optional prefix
+* `print('string')` - Print a string to `stdout`
+* `printerr('string')` - Print a string to `stderr`
+
+Similar to Python, GJS has a console you can use to test things out:
+
+```sh
+$ gjs-console
+gjs> log('test');
+Gjs-Message: 06:46:03.487: JS LOG: test
+
+gjs> try {
+....     throw new Error('an error');
+.... } catch (e) {
+....     logError(e, 'optional prefix');
+.... }
+
+(gjs-console:9133): Gjs-WARNING **: 06:47:06.311: JS ERROR: optional prefix: Error: an error
+@typein:2:16
+@<stdin>:1:34
+```
+
+When writing extensions, `print()` and `printerr()` are not particularly useful since we won't have easy access to `gnome-shell`'s `stdin` and `stderr` pipes. We'll be using `log()` and `logError()` and watch the log in a new terminal with `journalctl`:
+
+```sh
+$ journalctl -f -o cat /usr/bin/gnome-shell
+```
+
+### Enabling the Extension
+
+Since your extension is usually loaded when GNOME Shell starts, it is recommended you develop in a Xorg session so that you can easily restart it. You can restart it now to load your extension by pressing <kbd>Alt</kbd>+<kbd>F2</kbd> to open the *Run Dialog* and enter `restart`. Once GNOME Shell has restarted, you can enable your extension with this command:
+
+```sh
+$ gnome-shell-extension-tool -e demo@andyholmes.github.io
+'demo@andyholmes.github.io' is now enabled.
+```
+
+In your log you should see something like the following:
+
+```sh
+GNOME Shell started at Sun Dec 23 2018 07:14:35 GMT-0800 (PST)
+initializing Demo version 1
+enabling Demo version 1
+```
+
+## Making Changes
+
+Extensions can change the existing UI, add new elements or even modify the behaviour of GNOME Shell.
+
+### Adding UI Elements
+
+Many of the elements in GNOME Shell lile panel buttons, popup menus and notifications are built from reusable classes. Here are a few links to some commonly used elements.
+
+* https://gitlab.gnome.org/GNOME/gnome-shell/blob/3.28.3/js/ui/modalDialog.js
+* https://gitlab.gnome.org/GNOME/gnome-shell/blob/3.28.3/js/ui/panelMenu.js
+* https://gitlab.gnome.org/GNOME/gnome-shell/blob/3.28.3/js/ui/popupMenu.js
+
+You can browse around in the `ui/` folder or any other JavaScript file under `js/` for more code to be reused. Notice the path structure in the links above and how they compare to the imports below:
+
+```js
+const ModalDialog = imports.ui.modalDialog;
+const PanelMenu = imports.ui.panelMenu;
+const PopupMenu = imports.ui.popupMenu;
+```
+
+Let's add a button to the panel with a menu to start:
+
+```js
+'use strict';
+
+// GNOME APIs are under the `gi` namespace
+const Gio = imports.gi.Gio;
+const St = imports.gi.St;
+
+const ExtensionUtils = imports.misc.extensionUtils;
+const Me = ExtensionUtils.getCurrentExtension();
+const Main = imports.ui.main;
+const PanelMenu = imports.ui.panelMenu;
+
+
+/** An indicator representing a Device in the Status Area */
+class PanelButton extends PanelMenu.Button {
+
+    _init() {
+        super._init(null, `${Me.metadata.name} Button`, false);
+        
+        // Pick an icon
+        let icon = new St.Icon({
+            gicon: new Gio.ThemedIcon({name: 'face-laugh-symbolic'}),
+            style_class: 'system-status-icon'
+        });
+        this.actor.add_child(icon);
+        
+        // Add a menu item
+        this.menu.addAction('Menu Item', this.menuAction, null);
+    }
+    
+    menuAction() {
+        log('Menu item activated');
+    }
+}
+
+// We're going to declare this in the scope of the whole script so it can be
+// accessed in both `enable()` and `disable()`
+var button = null;
+
+
+function init() {
+    log(`initializing ${Me.metadata.name} version ${Me.metadata.version}`);
+}
+
+
+function enable() {
+    log(`enabling ${Me.metadata.name} version ${Me.metadata.version}`);
+    
+    button = new PanelButton();
+    
+    // The `main` import is an example of file that is mostly live instances of
+    // objects, rather than reusable code. `Main.panel` is the actual panel you
+    // see at the top of the screen.
+    Main.panel.addToStatusArea(`${Me.metadata.name} Button`, button);
+}
+
+
+function disable() {
+    log(`disabling ${Me.metadata.name} version ${Me.metadata.version}`);
+    
+    // It's important for extensions to clean up after themselves when they are
+    // disabled. Extensions are disabled in a several situations, such as when
+    // the screen locks to prevent privacy and security breaches.
+    if (button !== null) {
+        button.destroy();
+        button = null;
+    }
+}
+```
+
+![Panel Button][image3]
+
+[image3]: https://raw.githubusercontent.com/andyholmes/andyholmes.github.io/master/images/gnome-shell-extension-1-image3.png
+
+
+--------------------------------------------------------------------------------
+

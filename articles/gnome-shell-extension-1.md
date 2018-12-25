@@ -2,9 +2,9 @@
 
 GNOME Shell extensions are pretty easy to write, but a lot of the documentation available is outdated, scattered or just down-right unhelpful. It's pretty common for new authors to use an existing extension as a starting point, but that doesn't always work out well either.
 
-As of this writing, the latest Ubuntu LTS is 18.04 shipping with `gnome-shell 3.28` and `gjs 1.52`, so that's what we'll restrict ourselves to. Users of Fedora and other distributions will also often hang back one release and experience has taught me this is a fair line to draw.
+This is a groundup, no-frills overview of what you need to know to get started. We're going to use modern JavaScript, a text editor, a terminal and `zip`/`unzip`.
 
-This is a groundup, no-frills overview of what you need to know to get started. We're going to use modern JavaScript, a text editor, a terminal and `zip`/`unzip`. No fancy tools, template generators, linters or TypeScript. You can learn about those things later when you have a use for them.
+As of this writing, the latest Ubuntu LTS is 18.04 shipping with `gnome-shell 3.28` and `gjs 1.52`, so that's what we'll restrict ourselves to. Users of other distributions will also often hang back one release and this is a fair line to draw.
 
 ## Table of Contents
 
@@ -23,7 +23,7 @@ This is a groundup, no-frills overview of what you need to know to get started. 
    * [Modifying Behaviour](#modifying-behaviour)
 4. [Creating a Preferences Dialog](#creating-a-preferences-dialog)
    * [GSettings](#gsettings)
-   * [Building a Widget](#building-the-widget)
+   * [Building the Widget](#building-the-widget)
    
 ## Basic Overview
 
@@ -286,6 +286,7 @@ Let's add a button to the panel with a menu to start:
 // GNOME APIs are under the `gi` namespace
 // See: http://devdocs.baznga.org for documentation for the bindings
 const Gio = imports.gi.Gio;
+const GLib = imports.gi.GLib;
 const St = imports.gi.St;
 
 const ExtensionUtils = imports.misc.extensionUtils;
@@ -400,22 +401,15 @@ class PanelButton extends PanelMenu.Button {
         // also be StWidgets, but they all carry ClutterActor properties
         statusItem.actor.visible = !statusItem.actor.visible;
     }
-}
-
-// We'll also update our disable function to revert any changes we make
-function disable() {
-    log(`disabling ${Me.metadata.name} version ${Me.metadata.version}`);
     
-    // It's important for extensions to clean up after themselves when they are
-    // disabled. Extensions are disabled in a several situations, such as when
-    // the screen locks to prevent privacy and security breaches.
-    if (button !== null) {
-        for (let [name, visibility] of Object.entries(button.states)) {
+    // We'll override the destroy() function to revert any changes we make
+    destroy() {
+        // Restore the visibility of the panel items
+        for (let [name, visibility] of Object.entries(this.states)) {
             Main.panel.statusArea[name].actor.visible = visibility;
         }
         
-        button.destroy();
-        button = null;
+        super.destroy();
     }
 }
 ```
@@ -425,6 +419,355 @@ Now save `extension.js` and restart GNOME Shell again to see the menu allowing y
 ![Panel Button Menu](https://raw.githubusercontent.com/andyholmes/andyholmes.github.io/master/images/gnome-shell-extension-1-image4.png)
 
 ### Modifying Behaviour
+
+Other than changing the properties and appearance of elements in GNOME Shell, it's also possible to modify the behaviour of elements like notifications or interactive events. As a simple example, we'll steal the scroll event from the volume indicator for our panel button:
+
+```js
+// Grab the User Menu and Volume Indicator
+const VolumeIndicator = Main.panel.statusArea.aggregateMenu._volume;
+
+
+class PanelButton extends PanelMenu.Button {
+
+    _init() {
+        super._init(null, `${Me.metadata.name} Button`, false);
+        
+        // Pick an icon
+        let icon = new St.Icon({
+            gicon: new Gio.ThemedIcon({name: 'face-laugh-symbolic'}),
+            style_class: 'system-status-icon'
+        });
+        this.actor.add_child(icon);
+        
+        // Keep record of the original state of each item
+        this.states = {};
+        
+        // Add a menu item for each item in the panel
+        for (let name in Main.panel.statusArea) {
+            // Track this item's original visibility
+            this.states[name] = Main.panel.statusArea[name].actor.visible;
+        
+            this.menu.addAction(
+                `Toggle "${name}"`,
+                this.menuAction.bind(null, name),
+                null
+            );
+        }
+        
+        // Prevent the volume indicator from emitting the signal
+        VolumeIndicator.reactive = false;
+        
+        // Connect the callback to our button's signal
+        this._onScrollEventId = this.actor.connect(
+          'scroll-event',
+          VolumeIndicator._onScrollEvent.bind(VolumeIndicator)
+        );
+    }
+    
+    menuAction(name) {
+        log(`${name} menu item activated`);
+        
+        let statusItem = Main.panel.statusArea[name];
+
+        // Most classes in GNOME Shell are container classes with a ClutterActor
+        // as the property `actor`. St is an extension of Clutter so these may
+        // also be StWidgets, but they all carry ClutterActor properties
+        statusItem.actor.visible = !statusItem.actor.visible;
+    }
+    
+    // We'll override the destroy() function to revert any changes we make
+    destroy() {
+        // Restore the visibility of the panel items
+        for (let [name, visibility] of Object.entries(this.states)) {
+            Main.panel.statusArea[name].actor.visible = visibility;
+        }
+        
+        // Disconnect from the scroll-event signal
+        this.actor.disconnect(this._onScrollEventId);
+        
+        // Reset the volume indicator reactivity
+        VolumeIndicator.reactive = true;
+        
+        super.destroy();
+    }
+}
+```
+
+## Creating a Preferences Dialog
+
+Our preferences dialog will be written in Gtk, which gives us a lot of options for how we present settings to the user. You may consider looking through the GNOME Human Interface Guidelines for ideas or guidance. Keep in mind these are only guidelines and you *should* depart from them when necessary to make the most intuitive interface you can.
+
+### GSettings
+
+> ***WARNING***
+>
+> **Programmer errors with GSettings are fatal in *all* languages and will cause the application to crash!** Normally this means your application will quit and fail to start until you correct the problem. Since your extension is part of the `gnome-shell` process, this can prevent you from logging in. See [Recovering from Fatal Errors](#recovering-from-fatal-errors) below.
+
+The first thing to do is create a directory for your settings schema and an empty schema file:
+
+```sh
+$ mkdir schemas/
+$ touch demo.gschema.xml
+```
+
+Then open the file in your text editor and create a schema describing the settings for your extension:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="org.gnome.Shell.Extensions.Demo" path="/org/gnome/shell/extensions/demo/">
+    <key name="panel-states" type="a{sb}">
+      <default>{}</default>
+    </key>
+  </schema>
+</schemalist>
+```
+
+Generally, you are advised not to use "GNOME" in any of your application's names or ids to avoid giving the impression that your application is officially endorsed by the GNOME Foundation. In this case however, it is convention to use the above `id` and `path` form so that all GSettings for extensions can be found in a common place.
+
+Once you are done defining you schema, save the file and compile it into it's binary form:
+
+```sh
+$ glib-compile-schemas schemas/
+$ ls schemas
+demo.gschema.xml  gschemas.compiled
+```
+
+Now that our GSettings schema is compiled and ready to be used, we'll integrate it into our extension:
+
+```js
+class PanelButton extends PanelMenu.Button {
+
+    _init() {
+        super._init(null, `${Me.metadata.name} Button`, false);
+        
+        // Get the GSchema for our settings
+        let gschema = Gio.SettingsSchemaSource.new_from_directory(
+            Me.dir.get_child('schemas').get_path(),
+            Gio.SettingsSchemaSource.get_default(),
+            false
+        );
+
+        // Create a new settings object
+        this.settings = new Gio.Settings({
+            settings_schema: gschema.lookup('org.gnome.Shell.Extensions.Demo', true)
+        });
+        
+        // Pick an icon
+        let icon = new St.Icon({
+            gicon: new Gio.ThemedIcon({name: 'face-laugh-symbolic'}),
+            style_class: 'system-status-icon'
+        });
+        this.actor.add_child(icon);
+        
+        // Keep record of the original state of each item
+        this.states = {};
+        
+        // Read the saved states
+        this.saved = this.settings.get_value('panel-states').deep_unpack();
+        
+        // Add a menu item for each item in the panel
+        for (let name in Main.panel.statusArea) {
+            // Track this item's original visibility
+            this.states[name] = Main.panel.statusArea[name].actor.visible;
+            
+            // Restore our settings
+            if (name in this.saved) {
+                log(`Restoring state of ${name}`);
+                Main.panel.statusArea[name].actor.visible = this.saved[name];
+            }
+        
+            this.menu.addAction(
+                `Toggle "${name}"`,
+                this.menuAction.bind(this, name),
+                null
+            );
+        }
+        
+        // Prevent the volume indicator from emitting the signal
+        VolumeIndicator.reactive = false;
+        
+        // Connect the callback to our button's signal
+        this._onScrollEventId = this.actor.connect(
+          'scroll-event',
+          VolumeIndicator._onScrollEvent.bind(VolumeIndicator)
+        );
+    }
+    
+    menuAction(name) {
+        log(`${name} menu item activated`);
+        
+        let statusItem = Main.panel.statusArea[name];
+
+        // Most classes in GNOME Shell are container classes with a ClutterActor
+        // as the property `actor`. St is an extension of Clutter so these may
+        // also be StWidgets, but they all carry ClutterActor properties
+        statusItem.actor.visible = !statusItem.actor.visible;
+        
+        // Store our saved state
+        this.saved[name] = statusItem.actor.visible;
+    }
+    
+    // We'll override the destroy() function to revert any changes we make
+    destroy() {
+        // Store the panel settings in GSettings
+        this.settings.set_value(
+            'panel-states',
+            new GLib.Variant('a{sb}', this.saved)
+        );
+        
+        // Restore the visibility of the panel items
+        for (let [name, visibility] of Object.entries(this.states)) {
+            Main.panel.statusArea[name].actor.visible = visibility;
+        }
+        
+        // Disconnect from the scroll-event signal
+        this.actor.disconnect(this._onScrollEventId);
+        
+        // Reset the volume indicator reactivity
+        VolumeIndicator.reactive = true;
+        
+        super.destroy();
+    }
+}
+```
+
+Now save `extension.js` and restart GNOME Shell again. Change the visibility of one of the panel items and then disable the extension:
+
+```sh
+$ gnome-shell-extension-tool -d demo@andyholmes.github.io
+'demo@andyholmes.github.io' is now disabled.
+```
+
+The panel button from the extension should disappear, and the hidden panel item should reappear. Renable the extension and your settings should be restored:
+
+```sh
+$ gnome-shell-extension-tool -e demo@andyholmes.github.io
+'demo@andyholmes.github.io' is now enabled.
+```
+
+### Building the Widget
+
+Now that we have GSettings for our extension, we will give the use some control by creating a simple preference dialog. Start by creating the `prefs.js` file and opening it in your text editor:
+
+```sh
+$ touch prefs.js
+$ gedit prefs.js
+```
+
+Then we'll create a simple grid with a title, label and button for resetting our saved settings:
+
+```js
+'use strict';
+
+const Gio = imports.gi.Gio;
+const Gtk = imports.gi.Gtk;
+
+const ExtensionUtils = imports.misc.extensionUtils;
+const Me = ExtensionUtils.getCurrentExtension();
+
+
+function init() {
+}
+
+function buildPrefsWidget() {
+        
+    // Copy the same GSettings code from `extension.js`
+    let gschema = Gio.SettingsSchemaSource.new_from_directory(
+        Me.dir.get_child('schemas').get_path(),
+        Gio.SettingsSchemaSource.get_default(),
+        false
+    );
+
+    this.settings = new Gio.Settings({
+        settings_schema: gschema.lookup('org.gnome.Shell.Extensions.Demo', true)
+    });
+
+    // Create a parent widget that we'll return from this function
+    let layout = new Gtk.Grid({
+        margin: 18,
+        column_spacing: 12,
+        row_spacing: 12,
+        visible: true
+    });
+    
+    // Add a simple title and add it to the layout
+    let title = new Gtk.Label({
+        label: `<b>${Me.metadata.name} Extension Preferences</b>`,
+        halign: Gtk.Align.START,
+        use_markup: true,
+        visible: true
+    });
+    layout.attach(title, 0, 0, 2, 1);
+    
+    // Create a label to describe our button and add it to the layout
+    let label = new Gtk.Label({
+        label: 'Reset Panel Items:',
+        visible: true
+    });
+    layout.attach(label, 0, 1, 1, 1);
+    
+    // Create a 'Reset' button and add it to the layout
+    let button = new Gtk.Button({
+        label: 'Reset',
+        visible: true
+    });
+    layout.attach(button, 1, 1, 1, 1);
+    
+    // Connect the ::clicked signal to reset the stored settings
+    button.connect('clicked', (button) => settings.reset('panel-states'));
+
+    // Return our widget which will be added to the window
+    return layout;
+}
+```
+
+To test the new preferences dialog, you can launch it directly from the command line:
+
+```sh
+$ gnome-shell-extension-prefs demo@andyholmes.github.io
+```
+
+![Preferences Dialog](https://raw.githubusercontent.com/andyholmes/andyholmes.github.io/master/images/gnome-shell-extension-1-image5.png)
+
+We also want to keep our extension up to date with any changes that happen, so add a signal handler below where we create the GSettings object in `extension.js`:
+
+```js
+// Create a new settings object
+this.settings = new Gio.Settings({
+    settings_schema: gschema.lookup('org.gnome.Shell.Extensions.Demo', true)
+});
+        
+// Watch the settings for changes
+this._onSettingsChangedId = this.settings.connect(
+    'changed::panel-states',
+    this._onSettingsChanged.bind(this)
+);
+        
+// Pick an icon
+let icon = new St.Icon({
+```
+
+And add a callback function to the `PanelButton` class:
+
+```js
+_onSettingsChanged() {
+    // Load the new settings
+    this.saved = this.settings.get_value('panel-states').deep_unpack();
+    
+    // Restore or reset the panel items
+    for (let name in this.states) {
+        // If we have a saved state, set that
+        if (name in this.saved) {
+            Main.panel.statusArea[name].actor.visible = this.saved[name];
+            
+        // Otherwise restore the original state
+        } else {
+            Main.panel.statusArea[name].actor.visible = this.states[name];
+        }
+    }
+}
+```
 
 --------------------------------------------------------------------------------
 

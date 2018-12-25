@@ -17,7 +17,13 @@ This is a groundup, no-frills overview of what you need to know to get started. 
    * [`metadata.json` and `extension.js`](#metadatajson-and-extensionjs)
    * [Basic Debugging](#basic-debugging)
    * [Enabling the Extension](#enabling-the-extension)
-3. [Adding UI Elements](#adding-ui-elements)
+3. [Making Changes](#making-changes)
+   * [Adding UI Elements](#adding-ui-elements)
+   * [Changing UI Elements](#changing-ui-elements)
+   * [Modifying Behaviour](#modifying-behaviour)
+4. [Creating a Preferences Dialog](#creating-a-preferences-dialog)
+   * [GSettings](#gsettings)
+   * [Building a Widget](#building-the-widget)
    
 ## Basic Overview
 
@@ -278,6 +284,7 @@ Let's add a button to the panel with a menu to start:
 'use strict';
 
 // GNOME APIs are under the `gi` namespace
+// See: http://devdocs.baznga.org for documentation for the bindings
 const Gio = imports.gi.Gio;
 const St = imports.gi.St;
 
@@ -287,7 +294,8 @@ const Main = imports.ui.main;
 const PanelMenu = imports.ui.panelMenu;
 
 
-/** An indicator representing a Device in the Status Area */
+// We'll extend the Button class from Panel Menu so we can do some setup in
+// the init() function.
 class PanelButton extends PanelMenu.Button {
 
     _init() {
@@ -344,10 +352,79 @@ function disable() {
 }
 ```
 
-![Panel Button][image3]
+Now save `extension.js` and restart GNOME Shell to see the button with it's menu in the panel:
 
-[image3]: https://raw.githubusercontent.com/andyholmes/andyholmes.github.io/master/images/gnome-shell-extension-1-image3.png
+![Panel Button](https://raw.githubusercontent.com/andyholmes/andyholmes.github.io/master/images/gnome-shell-extension-1-image3.png)
 
+
+### Changing UI Elements
+
+Since we are working within an active process, we can also modify the properties of existing elements in the UI. Let's expand the button's menu to include some other elements from the panel:
+
+```js
+class PanelButton extends PanelMenu.Button {
+
+    _init() {
+        super._init(null, `${Me.metadata.name} Button`, false);
+        
+        // Pick an icon
+        let icon = new St.Icon({
+            gicon: new Gio.ThemedIcon({name: 'face-laugh-symbolic'}),
+            style_class: 'system-status-icon'
+        });
+        this.actor.add_child(icon);
+        
+        // Keep record of the original state of each item
+        this.states = {};
+        
+        // Add a menu item for each item in the panel
+        for (let name in Main.panel.statusArea) {
+            // Track this item's original visibility
+            this.states[name] = Main.panel.statusArea[name].actor.visible;
+        
+            this.menu.addAction(
+                `Toggle "${name}"`,
+                this.menuAction.bind(null, name),
+                null
+            );
+        }
+    }
+    
+    menuAction(name) {
+        log(`${name} menu item activated`);
+        
+        let statusItem = Main.panel.statusArea[name];
+
+        // Most classes in GNOME Shell are container classes with a ClutterActor
+        // as the property `actor`. St is an extension of Clutter so these may
+        // also be StWidgets, but they all carry ClutterActor properties
+        statusItem.actor.visible = !statusItem.actor.visible;
+    }
+}
+
+// We'll also update our disable function to revert any changes we make
+function disable() {
+    log(`disabling ${Me.metadata.name} version ${Me.metadata.version}`);
+    
+    // It's important for extensions to clean up after themselves when they are
+    // disabled. Extensions are disabled in a several situations, such as when
+    // the screen locks to prevent privacy and security breaches.
+    if (button !== null) {
+        for (let [name, visibility] of Object.entries(button.states)) {
+            Main.panel.statusArea[name].actor.visible = visibility;
+        }
+        
+        button.destroy();
+        button = null;
+    }
+}
+```
+
+Now save `extension.js` and restart GNOME Shell again to see the menu allowing you toggle the visibility of panel items:
+
+![Panel Button Menu](https://raw.githubusercontent.com/andyholmes/andyholmes.github.io/master/images/gnome-shell-extension-1-image4.png)
+
+### Modifying Behaviour
 
 --------------------------------------------------------------------------------
 

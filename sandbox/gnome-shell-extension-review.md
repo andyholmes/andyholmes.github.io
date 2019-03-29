@@ -3,12 +3,14 @@
 This document briefly describes requirements and tips for getting your extension
 approved during review.
 
+
 ## Requirements
 
 GNOME Shell extensions are patches applied during runtime that can affect the
 stability and security of the desktop. These requirements must be followed in
 order for your extension to be approved for distribution on extension.gnome.org.
 Failure to meet these requirements will result in your extension being rejected.
+
 
 ### Don’t do anything major in `init()`
 
@@ -32,7 +34,7 @@ when your extension is loaded and therefore can not be reverted later.
 * Bind any properties
 * Override any functions
 * Create any objects
-* Create any GSources such as with `GLib.timeout_add()` or `GLib.idle_add()`
+* Add any MainLoop sources such as with `GLib.timeout_add()`
 
 
 ### Undo all modifications in `disable()`
@@ -84,38 +86,10 @@ please explicitly dual-license your code.
 
 GNOME Shell extensions are reviewed carefully for malicious code, malware and
 security risks, but are not reviewed for bugs or issues. The following sections
-are tips for common problem areas and getting your reviewed quicker. 
+are tips for common problem areas and getting your reviewed quicker.
 
 
-### Don't `Reject` your own extension
-
-Please do not mark your own extension as `Rejected`. Marking an extension as
-rejected interferes with the workflow used by reviewers to compare differences
-between submissions.
-
-If there is a critical bug or mistake you have fixed in a newer submission, or
-plan to correct soon, simply add a comment to the review stating this.
-
-
-### Be cautious with `GSettings`
-
-Programmer errors with `GSettings` are fatal in all languages and will cause a
-GLib application to exit. Since the code in your extension code is executed in
-the `gnome-shell` process, a fatal error will cause GNOME Shell to crash.
-
-An easy way to create this problem is by relying on the existence of system
-schemas or keys which may not exist for every user. If the error is caused as a
-result of your extension being loaded or enabled, this can leave an user unable
-to log in, disable the extension or even ask for help.
-
-* Test your usage of GSettings and avoid unsanitized user input
-* Avoid interacting with system schemas or confirm settings schemas are a part
-  of the core GNOME desktop
-* Use `Gio.SettingsSchemaSource.lookup()`, `Gio.SettingsSchemaSource.has_key()`
-  and other relevant functions to when you need dynamic behaviour
-
-
-## Use consistent code style
+### Use consistent code style
 
 Using consistent indentation and code style will make reviewing your extension
 easier and get your extension approved sooner.
@@ -125,4 +99,29 @@ Shell itself (see [GNOME Shell's source][shell-js] for thorough exampless). If
 you choose a slightly different style, please be consistent.
 
 [shell-js]: https://gitlab.gnome.org/GNOME/gnome-shell/blob/master/js/ui/
+
+
+### Don't reject your own extension
+
+Please do not mark your own extension as `Rejected`. Marking an extension as
+rejected interferes with the workflow used by reviewers to compare differences
+between submissions.
+
+If there is a critical bug or mistake you have fixed in a newer submission,
+simply add a comment to the review stating this.
+
+
+### Be cautious with GSettings
+
+Programmer errors with GSettings are fatal in all languages and will cause a
+GLib application to exit. Since the code in your extension code is executed in
+the `gnome-shell` process, a fatal error will cause GNOME Shell to crash.
+
+If the error happens when your extension is loaded or enabled, this can leave a
+user unable to log in, disable the extension or even ask for help.
+
+* Test your usage of GSettings and avoid unsanitized user input
+* Confirm settings schemas and keys are a part of the core GNOME desktop
+* Use `Gio.SettingsSchemaSource.lookup()`, `Gio.SettingsSchemaSource.has_key()`
+  and other relevant functions to when you need dynamic behaviour
 

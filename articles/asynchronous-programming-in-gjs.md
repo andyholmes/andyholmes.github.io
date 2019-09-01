@@ -185,6 +185,89 @@ Notice that the script takes ~4 seconds since once a Promise has started executi
 
 Also pay attention to how `log('started');` is executed *before* the first invocation of `myPromiseFunc()` due to the use of `await`. Although there is no threading happening here, the principle of thread-safety still applies to the execution order of operations in the event loop.
 
+## Promises and GSources
+
+While functions like `GLib.usleep()` can delay execution of code in a function, they also block the execution of all other code in the process. Not very asynchronous.
+
+If you want to delay execution of code in a function, but still allow other code and events to continue executing, you can combine a Promise and a GSource. Let's define some new Promise helpers:
+
+```js
+const GLib = imports.gi.GLib;
+
+
+/**
+ * Idle Promise
+ *
+ * @param {number} priority - The priority of the idle source
+ */
+Promise.idle = function(priority) {
+    return new Promise(resolve => GLib.idle_add(priority, resolve));
+};
+
+/**
+ * Timeout Promise (ms)
+ *
+ * @param {number} priority - The priority of the timeout source
+ * @param {number} interval - Delay in milliseconds before resolving
+ */
+Promise.timeout = function(priority = GLib.PRIORITY_DEFAULT, interval = 100) {
+    return new Promise(resolve => GLib.timeout_add(priority, interval, resolve));
+};
+
+/**
+ * Timeout Promise (s)
+ *
+ * @param {number} priority - The priority of the timeout source
+ * @param {number} interval - Delay in seconds before resolving
+ */
+Promise.timeoutSeconds = function(priority = GLib.PRIORITY_DEFAULT, interval = 1) {
+    return new Promise(resolve => GLib.timeout_add_seconds(priority, interval, resolve));
+};
+
+let start = Date.now();
+
+// In an async function
+async function slowLoop() {
+    // Catch your rejections as a whole
+    try {
+        for (let i = 0; i < 3; i++) {
+            // ...or per iteration
+            try {
+                await Promise.timeoutSeconds();
+                log(`${(Date.now() - start) / 1000}s elapsed`);
+            } catch (e) {
+                throw e;
+            }
+        }
+    } catch (e) {
+        logError(e);
+    }
+}
+
+
+let loop = GLib.MainLoop.new(null, false);
+
+slowLoop().then(result => loop.quit());
+
+Promise.idle().then(res => {
+    log(`Idle Promise: ${(Date.now() - start) / 1000}`);
+});
+
+loop.run();
+```
+
+Expected output:
+
+```sh
+$ gjs async-gsource.js
+Gjs-Message: 20:20:50.334: JS LOG: Idle Promise: 0.001
+Gjs-Message: 20:20:51.622: JS LOG: 1.289s elapsed
+Gjs-Message: 20:20:52.622: JS LOG: 2.289s elapsed
+Gjs-Message: 20:20:53.621: JS LOG: 3.288s elapsed
+```
+
+Notice that the idle Promise resolves almost immediately, because there will be no higher priority events due for over a second. Additionally, unless you need millisecond accuracy, note that `GLib.timeout_add_seconds()` will attempt to group events to prevent excessive wake-ups (See: https://wiki.gnome.org/Initiatives/GnomeGoals/UseTimeoutAddSeconds).
+
 ## GTask API
 
 [GTask][gtask] is an API commonly used by Gnome libraries to implement asynchronous functions that can be run in dedicated threads, prioritized in the event loop and cancelled mid-operation from another thread. Generally, these functions follow a pattern of:
@@ -194,7 +277,7 @@ SourceObj.foo_async(
     arguments,                                      // May not apply
     priority,                                       // May not apply
     cancellable,                                    // Gio.Cancellable or %null
-    (sourceObj, resultObj) => {                     // GAsyncReadyCallback
+    (sourceObj, resultObj) => {                     // GAsyncReadyCallback or %null
         let res = sourceObj.foo_finish(resultObj);  // Can throw errors
     }
 );

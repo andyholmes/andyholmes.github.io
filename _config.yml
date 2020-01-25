@@ -1,3 +1,13 @@
 theme: jekyll-theme-slate
 title: Andy Holmes
 description: Time well pasted
+
+collections:
+  articles:
+    output: true
+    
+defaults:
+  - scope:
+    path: ""
+    type: "articles"
+    layout: article

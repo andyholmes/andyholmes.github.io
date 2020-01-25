@@ -8,6 +8,7 @@ collections:
     
 defaults:
   - scope:
-    path: ""
-    type: "articles"
-    layout: article
+      path: ""
+      type: "articles"
+    values:
+      layout: "article"

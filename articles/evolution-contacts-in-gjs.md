@@ -129,7 +129,7 @@ Gjs-Message: 17:28:22.339: JS LOG: Address Book: Personal
 ## Sources and Extensions
 
 Now that we know how to get a list of address book sources, we should explain
-what an [`ESources`][esource] is. In the example above we printed the display
+what an [`ESource`][esource] is. In the example above we printed the display
 name of each source, but that didn't tell us much about the address books.
 
 `ESources` have a parent-child relationship and each `ESource` may implement one
@@ -222,7 +222,7 @@ const EBook = imports.gi.EBook;
  * Get an EBookClient for @source. If @cancellable is given it can be used to
  * cancel the operation before it completes.
  *
- * @param {EDataServer.Source} client an EBook.BookClient
+ * @param {EDataServer.Source} source - an EDataServer.Source
  * @param {Gio.Cancellable} [cancellable] - optional Gio.Cancellable object
  * @returns {EBook.BookClient} - a client
  */
@@ -574,7 +574,7 @@ const AddressBooks = new Map();
 async function onAppeared(watcher, source) {
     try {
         // Get an EBookClient and add it to the Map
-        let client = await this._getEBookClient(source);
+        let client = await getEBookClient(source);
         
         AddressBooks.set(source.get_uid(), client);
     } catch (e) {

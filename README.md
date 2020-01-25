@@ -11,10 +11,10 @@ configuration files, and other things. I hope you find some of it useful.
 <h1>Articles</h1>
 
 <ul>
-  {% for post in site.posts %}
+  {% for article in site.articles %}
     <li>
-      <h2><a href="{{ post.url }}">{{ post.title }}</a></h2>
-      <p>{{ post.excerpt }}</p>
+      <h2><a href="{{ article.url }}">{{ article.title }}</a></h2>
+      <p>{{ article.excerpt }}</p>
     </li>
   {% endfor %}
 </ul>

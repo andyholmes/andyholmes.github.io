@@ -1,4 +1,8 @@
-# Evolution Contacts in GJS
+---
+layout: article
+title: Evolution Contacts in GJS
+description: An overview of Evolution Contacts for a read-only use case in GJS
+---
 
 While [Folks][folks] can aggregrate and sort duplicate contacts from
 [Evolution Data Server][evolution], [Telepathy][telepathy] and other sources, it

@@ -1,6 +1,7 @@
 ---
 layout: article
 title: Asynchronous Programming in GJS
+description: A primer on Promises, async/await, threading and the event loop in GJS
 ---
 
 Although JavaScript engines use threading behind the scenes, JavaScript programs use a single-threaded event loop. This means that long, synchronous operations can block the event loop from executing other operations until completed. This can cause noticeable hangs in interactive scripts and in the case of a Gnome Shell extension could even lock up the whole desktop.

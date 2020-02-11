@@ -12,9 +12,7 @@ defaults:
       type: "articles"
     values:
       layout: "article"
-      theme: "jekyll-theme-slate"
   - scope:
       path: ""
     values:
       layout: "default"
-      theme: "jekyll-theme-slate"

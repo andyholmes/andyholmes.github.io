@@ -2,6 +2,7 @@
 layout: article
 title: Evolution Contacts in GJS
 description: An overview of Evolution Contacts for a read-only use case in GJS
+date: 2019-12-16
 ---
 
 While [Folks][folks] can aggregrate and sort duplicate contacts from
@@ -14,7 +15,7 @@ specifically covering Address Books and Contacts for a read-only use case. It
 will allow you access to contacts in the local address book, Evolution and GNOME
 Online Account.
 
-You can find the API documentation at https://gjs-docs.gnome.org/.
+You can find the API documentation for GJS at <https://gjs-docs.gnome.org/>.
 
 [folks]: https://wiki.gnome.org/Projects/Folks
 [evolution]: https://wiki.gnome.org/Apps/Evolution
@@ -406,7 +407,7 @@ helpers:
 | Operator     | Function              |
 |--------------|-----------------------|
 | `and`        | Logical AND (`&&`)    |
-| `or`         | Logical OR  (`\|\|`)  |
+| `or`         | Logical OR  (`||`)    |
 | `not`        | Logical NOT (`!`)     |
 | `is`         | Logical EQUAL  (`==`) |
 | `contains`   | String contains `x`   |

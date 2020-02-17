@@ -29,7 +29,7 @@ Extract and sort all tags from articles/posts, then remove duplicates
   {% endif %}
 {% endfor %}
 
-<h2>Tags</h2>
+<h1>Tags</h1>
 
 <p>
 {% for tag in tags %}
@@ -41,16 +41,9 @@ Extract and sort all tags from articles/posts, then remove duplicates
 <section class="section-listing">
 {% for tag in tags %}
   <section>
-    <h3>{{ tag }}</h3>
-    {% for post in items %}
-      {% if post.tags contains tag %}
-    <article>
-      <h4><a href="{{ post.url }}">{{ post.title }}</a></h4>
-      <time datetime="{{ post.date }}">{{ post.date | date: "%b %d, %Y" }}</time>
-      {% for tag in post.tags %}
-        <a href="/tags/#{{ tag | slugify }}" class="tag" style="float:right">{{ tag }}</a>
-      {% endfor %}
-    </article>
+    <h2>{{ tag }}</h2>
+    {% for item in items %}
+      {% if item.tags contains tag %}
       {% include summary.html short=true %}
       {% endif %}
     {% endfor %}

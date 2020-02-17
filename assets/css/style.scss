@@ -68,6 +68,11 @@ nav a:hover {
   transition-duration: 0.2s;
 }
 
+/* Articles */
+article.summary a.tag {
+  float: right;
+}
+
 /* Code */
 a code {
   text-decoration: underline;
@@ -97,6 +102,32 @@ pre.highlight code {
 /* Misc Formatting */
 dd {
   margin-bottom: 1em;
+}
+
+/* Tags */
+.tag {
+  display: inline-block;
+  background: #dedede;
+  font-size: small;
+  font-weight: bold;
+  padding: 0 0.5em;
+  margin-right: 0.5em;
+  border-radius: 0.25em;
+  color: #212121;
+  transition: all 0.1s ease-in-out;
+  vertical-align: middle;
+}
+
+.tag:before {
+  content: '\f02b';
+  font-family: 'Font Awesome 5 Free';
+  padding-right: 0.5em;
+}
+
+.tag:hover {
+  text-decoration: none;
+  background: #373737;
+  color: #fff;
 }
 
 /* External Links */

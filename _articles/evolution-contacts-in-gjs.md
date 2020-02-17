@@ -3,6 +3,7 @@ layout: article
 title: Evolution Contacts in GJS
 description: An overview of Evolution Contacts for a read-only use case in GJS
 date: 2019-12-16
+tags: [gjs]
 ---
 
 While [Folks][folks] can aggregrate and sort duplicate contacts from

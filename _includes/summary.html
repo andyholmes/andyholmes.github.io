@@ -1,0 +1,12 @@
+<article class="summary">
+  <h3><a href="{{ item.url }}">{{ item.title }}</a></h3>
+  <time datetime="{{ item.date }}">{{ item.date | date: "%b %d, %Y" }}</time>
+  {% for tag in item.tags %}
+  <a href="/tags/#{{ tag | slugify }}" class="tag">{{ tag }}</a>
+  {% endfor %}
+  {% if include.short %}
+  <p>{{ item.description }}</p>
+  {% else %}
+  <p>{{ item.excerpt }}</p>
+  {% endif %}
+</article>

@@ -73,6 +73,21 @@ article.summary a.tag {
   float: right;
 }
 
+.article-header {
+  margin: 1em 0 2em 0;
+}
+
+.article-header h1 {
+  line-height: 1em;
+  margin: 0;
+  padding: 0;
+}
+
+.article-header time {
+  color: #6e6e6e;
+  font-weight: bold;
+}
+
 /* Code */
 a code {
   text-decoration: underline;

@@ -30,11 +30,21 @@ You can find the API documentation for GJS at <https://gjs-docs.gnome.org/>.
 
 ## GLib Event Loop
 
-It is important to understand that unlike Firefox, in GJS we use GLib's [Main Event Loop][glib-mainloop] with the SpiderMonkey JavaScript engine. This means that we can control the execution of events in ways that aren't exposed in standard JavaScript and add events from other sources.
+It is important to understand that unlike Firefox, in GJS we use GLib's
+[Main Event Loop][glib-mainloop] with the SpiderMonkey JavaScript engine. This
+means that we can control the execution of events in ways that aren't exposed in
+standard JavaScript and add events from other sources.
 
-**Sources** of events could be IO streams like when waiting for data on a TCP connection, timeouts like those created with `GLib.timeout_add()` or like sources created with `GLib.idle_add()` that wait until no higher priority event is waiting. In GJS Promises are essentially a type of event source.
+**Sources** of events could be IO streams like when waiting for data on a TCP
+connection, timeouts like those created with `GLib.timeout_add()` or like
+sources created with `GLib.idle_add()` that wait until no higher priority event
+is waiting. In GJS Promises are essentially a type of event source.
 
-**Priorities** are integer values determining the order operations in the event loop will be executed. Promises are given `GLib.PRIORITY_DEFAULT` and then queued as described by the Promise API. Consider the table below and how `Gtk.PRIORITY_RESIZE` has a higher priority than `Gdk.PRIORITY_REDRAW` so a redraw won't happen for every step resizing a window.
+**Priorities** are integer values determining the order operations in the event
+loop will be executed. Promises are given `GLib.PRIORITY_DEFAULT` and then
+queued as described by the Promise API. Consider the table below and how
+`Gtk.PRIORITY_RESIZE` has a higher priority than `Gdk.PRIORITY_REDRAW` so a
+redraw won't happen for every step resizing a window.
 
 | Constant                  | Value |
 |---------------------------|-------|
@@ -44,7 +54,11 @@ It is important to understand that unlike Firefox, in GJS we use GLib's [Main Ev
 | `GLib.PRIORITY_DEFAULT`   | 0     |
 | `GLib.PRIORITY_HIGH`      | -100  |
 
-**Callbacks** for event sources should return a boolean, `GLib.SOURCE_CONTINUE` (`true`) or `GLib.SOURCE_REMOVE` (`false`), which will determine whether it is removed or not. JavaScript's async functions are usually not suitable as a callback since the implicitly returned Promise will be coerced to `true`. A callback with no return or `undefined` will be coerced to `false`.
+**Callbacks** for event sources should return a boolean, `GLib.SOURCE_CONTINUE`
+(`true`) or `GLib.SOURCE_REMOVE` (`false`), which will determine whether it is
+removed or not. JavaScript's async functions are usually not suitable as a
+callback since the implicitly returned Promise will be coerced to `true`. A
+callback with no return or `undefined` will be coerced to `false`.
 
 ```js
 const GLib = imports.gi.GLib;
@@ -113,9 +127,12 @@ Gjs-Message: 18:54:15.337: JS LOG: type in terminal and press enter
 
 ## Basic Promise Usage
 
-Basic Promise behaviour and scheduling is important to truly leverage asynchronous code in GJS, so you should review Mozilla's guide to [Using Promises][mdn-promises] and [async functions][mdn-async] if you're new to the Promise API.
+Basic Promise behaviour and scheduling is important when using asynchronous code
+in GJS, so you should review Mozilla's guide to [Using Promises][mdn-promises]
+and [async functions][mdn-async] if you're new to the Promise API.
 
-Let's run through a quick example anyways and use the opportunity to cover a few GJS specifics.
+Let's run through a quick example anyways and use the opportunity to cover a few
+GJS specifics.
 
 ```js
 const GLib = imports.gi.GLib;
@@ -196,15 +213,25 @@ user	0m0.172s
 sys	0m0.007s
 ```
 
-Notice that the script takes ~4 seconds since once a Promise has started executing it is still synchronous. Using a Promise won't prevent blocking by itself, but using `await` can allow you to break up multi-part functions in smaller tasks and give the event loop a chance to execute other operations.
+Notice that the script takes ~4 seconds since once a Promise has started
+executing it is still synchronous. Using a Promise won't prevent blocking by
+itself, but using `await` can allow you to break up multi-part functions in
+smaller tasks and give the event loop a chance to execute other operations.
 
-Also pay attention to how `log('started');` is executed *before* the first invocation of `myPromiseFunc()` due to the use of `await`. Although there is no threading happening here, the principle of thread-safety still applies to the execution order of operations in the event loop.
+Also pay attention to how `log('started');` is executed *before* the first
+invocation of `myPromiseFunc()` due to the use of `await`. Although there is no
+threading is use here, taking care not to create race conditions is still
+important when considering the execution order of operations in the event loop.
 
 ## Promises and GSources
 
-While functions like `GLib.usleep()` can delay execution of code in a function, they also block the execution of all other code in the process. Not very asynchronous.
+While functions like `GLib.usleep()` can delay execution of code in a function,
+they also block the execution of all other code in the process. Not very
+asynchronous.
 
-If you want to delay execution of code in a function, but still allow other code and events to continue executing, you can combine a Promise and a GSource. Let's define some new Promise helpers:
+If you want to delay execution of code in a function, but still allow other code
+and events to continue executing, you can combine a Promise and a GSource. Let's
+define some new Promise helpers:
 
 ```js
 const GLib = imports.gi.GLib;
@@ -281,11 +308,18 @@ Gjs-Message: 20:20:52.622: JS LOG: 2.289s elapsed
 Gjs-Message: 20:20:53.621: JS LOG: 3.288s elapsed
 ```
 
-Notice that the idle Promise resolves almost immediately, because there will be no higher priority events due for over a second. Additionally, unless you need millisecond accuracy, note that `GLib.timeout_add_seconds()` will attempt to group events to prevent excessive wake-ups (See: https://wiki.gnome.org/Initiatives/GnomeGoals/UseTimeoutAddSeconds).
+Notice that the idle Promise resolves almost immediately, because there will be
+no higher priority events due for over a second. Additionally, unless you need
+millisecond accuracy, note that `GLib.timeout_add_seconds()` will attempt to
+group events to prevent excessive wake-ups (See:
+<https://wiki.gnome.org/Initiatives/GnomeGoals/UseTimeoutAddSeconds>).
 
 ## GTask API
 
-[GTask][gtask] is an API commonly used by Gnome libraries to implement asynchronous functions that can be run in dedicated threads, prioritized in the event loop and cancelled mid-operation from another thread. Generally, these functions follow a pattern of:
+[GTask][gtask] is an API commonly used by Gnome libraries to implement
+asynchronous functions that can be run in dedicated threads, prioritized in the
+event loop and cancelled mid-operation from another thread. Generally, these
+functions follow a pattern of:
 
 ```js
 SourceObj.foo_async(
@@ -298,7 +332,8 @@ SourceObj.foo_async(
 );
 ```
 
-We'll use the common task of reading the contents of a file as an example of wrapping a GTask async function:
+We'll use the common task of reading the contents of a file as an example of
+wrapping a GTask async function:
 
 ```js
 const Gio = imports.gi.Gio;
@@ -361,14 +396,17 @@ cancellable.cancel();
 loop.run();
 ```
 
-Now let's remove the cancellable and re-use `loadContents()` and `loadFile()` to test how threaded Promises play out. If you don't have suitable files handy, you can create an empty 10MB and 10KB file to compare:
+Now let's remove the cancellable and re-use `loadContents()` and `loadFile()` to
+test how threaded Promises play out. If you don't have suitable files handy, you
+can create an empty 10MB and 10KB file to compare:
 
 ```sh
 $ dd if=/dev/zero of=10mb.txt count=10240 bs=1024
 $ dd if=/dev/zero of=10kb.txt count=10 bs=1024
 ```
 
-Then put the following snippet in place of the calls to `cancel()` and `loadFile()`:
+Then put the following snippet in place of the calls to `cancel()` and
+`loadFile()`:
 
 ```js
 let start = Date.now();
@@ -390,7 +428,10 @@ Gjs-Message: 18:41:55.122: JS LOG: 10kb finished, 2ms elapsed
 Gjs-Message: 18:41:55.149: JS LOG: 10mb finished, 36ms elapsed
 ```
 
-The longer operation doesn't block the shorter operation anymore and they finish in the expected order. In fact, because `loadFile()` is a Promise and we didn't using `await`, the two operations are essentially running in parallel. Try switching the order of the functions or reading the 10mb file twice:
+The longer operation doesn't block the shorter operation anymore and they finish
+in the expected order. In fact, because `loadFile()` is a Promise and we didn't
+using `await`, the two operations are essentially running in parallel. Try
+switching the order of the functions or reading the 10mb file twice:
 
 ```sh
 $ gjs async-file.js 
@@ -400,9 +441,17 @@ Gjs-Message: 18:50:04.043: JS LOG: 10mb finished, 40ms elapsed
 
 ## Spawning Processes
 
-`Gio.Subprocess` is similar to `subprocess.py` in Python, allowing you to spawn and communicate with applications asynchronously using the GTask API. It is preferred over GLib's lower-level functions since it automatically reaps child processes avoiding zombie processes and prevents dangling file descriptors. This is especially important in GJS because of how "out" parameters are handled.
+`Gio.Subprocess` is similar to `subprocess.py` in Python, allowing you to spawn
+and communicate with applications asynchronously using the GTask API. It is
+preferred over GLib's lower-level functions since it automatically reaps child
+processes avoiding zombie processes and prevents dangling file descriptors. This
+is especially important in GJS because of how "out" parameters are handled.
 
-Consider the following snippet using `GLib.spawn_async_with_pipes()`. In other languages we would pass "in" `null` as a function argument for pipes like `stdin` that we don't plan on using, preventing them from being opened. In GJS all three pipes are opened implicitly and must be explicitly closed, or we may eventually get a *"Too many open files"* error.
+Consider the following snippet using `GLib.spawn_async_with_pipes()`. In other
+languages we would pass "in" `null` as a function argument for pipes like
+`stdin` that we don't plan on using, preventing them from being opened. In GJS
+all three pipes are opened implicitly and must be explicitly closed, or we may
+eventually get a *"Too many open files"* error.
 
 ```js
 let [ok, pid, stdin, stdout, stderr] = GLib.spawn_async_with_pipes(
@@ -414,7 +463,8 @@ let [ok, pid, stdin, stdout, stderr] = GLib.spawn_async_with_pipes(
 );
 ```
 
-Let's try a simple exercise of using `Gio.Subprocess` to execute `ls -a` in the current directory then log the output manually.
+Let's try a simple exercise of using `Gio.Subprocess` to execute `ls -a` in the
+current directory then log the output manually.
 
 ```js
 const Gio = imports.gi.Gio;
@@ -484,14 +534,20 @@ Gjs-Message: 16:57:26.784: JS LOG:
 
 ## GSignals
 
-Since async functions *immediately* return a Promise object they can be used as callbacks for signals that would normally block until the callback finished its operation.
+Since async functions *immediately* return a Promise object they can be used as
+callbacks for signals that would normally block until the callback finished its
+operation.
 
-Although many signals have `void` or irrelevant return values, some like `GtkWidget::delete-event` are propagated to other objects depending on the return value (usually boolean). As with event source callbacks, keep in mind that a Promise returned by a signal callback will be coerced to `true`.
+Although many signals have `void` or irrelevant return values, some like
+`GtkWidget::delete-event` are propagated to other objects depending on the
+return value (usually boolean). As with event source callbacks, keep in mind
+that a Promise returned by a signal callback will be coerced to `true`.
 
 Take for example `Gio.SocketService::incoming` whose documentation says:
 
-> ...the handler must immediately return, or else it will block additional incoming connections from being serviced.
-> [Return] TRUE to stop other handlers from being called
+> ...the handler must immediately return, or else it will block additional
+> incoming connections from being serviced. [Return] TRUE to stop other handlers
+from being called
 
 ```js
 const Gio = imports.gi.Gio;
@@ -513,7 +569,10 @@ service.connect('incoming', async (service, connection, source_object) => {
 loop.run();
 ```
 
-On the topic of GSignals, if subclassing a GObject `vfunc_` overrides often have much less overhead than callbacks, especially for signals that are frequently emitted. There are good opportunities to improve performance for many common and low-level signals like `GtkWidget::draw`:
+On the topic of GSignals, if subclassing a GObject `vfunc_` overrides often have
+much less overhead than callbacks, especially for signals that are frequently
+emitted. There are good opportunities to improve performance for many common and
+low-level signals like `GtkWidget::draw`:
 
 ```js
 var MyWidget = GObject.registerClass({

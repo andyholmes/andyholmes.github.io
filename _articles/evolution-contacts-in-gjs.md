@@ -6,15 +6,15 @@ date: 2019-12-16
 tags: [gjs]
 ---
 
-While [Folks][folks] can aggregrate and sort duplicate contacts from
-[Evolution Data Server][evolution], [Telepathy][telepathy] and other sources, it
-doesn't work well (or at all) in most language bindings. Although, if you're
-writing an application in [Vala][vala] or even C, it might be the better choice.
-
 This is an overview of basic interaction with Evolution Data Server in GJS,
 specifically covering Address Books and Contacts for a read-only use case. It
 will allow you access to contacts in the local address book, Evolution and GNOME
 Online Account.
+
+While [Folks][folks] can aggregrate and sort duplicate contacts from
+[Evolution Data Server][evolution], [Telepathy][telepathy] and other sources, it
+doesn't work well (or at all) in most language bindings. Although, if you're
+writing an application in [Vala][vala] or even C, it might be the better choice.
 
 You can find the API documentation for GJS at <https://gjs-docs.gnome.org/>.
 

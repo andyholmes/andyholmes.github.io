@@ -4,9 +4,5 @@
   {% for tag in item.tags %}
   <a href="/tags#{{ tag | slugify }}" class="tag">{{ tag }}</a>
   {% endfor %}
-  {% if include.short %}
-  <p>{{ item.description }}</p>
-  {% else %}
   <p>{{ item.excerpt }}</p>
-  {% endif %}
 </article>

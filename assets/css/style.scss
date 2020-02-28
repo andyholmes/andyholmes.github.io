@@ -145,6 +145,18 @@ dd {
   color: #fff;
 }
 
+.tag-group {
+  margin-bottom: 1em;
+}
+
+.tag-group .tag {
+  float: right;
+}
+
+.tag-group h3 {
+  font-size: larger;
+}
+
 /* External Links */
 main .external-link:after {
   content: '\a0\f35d';

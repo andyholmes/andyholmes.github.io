@@ -1,7 +1,6 @@
 ---
 layout: article
 title: DBus in GJS
-description: An lengthy overview of DBus in GJS
 date: 2020-02-16
 tags: [gjs, dbus]
 ---

@@ -1,7 +1,6 @@
 ---
 layout: article
 title: Asynchronous Programming in GJS
-description: A primer on Promises, async/await, threading and the event loop in GJS
 date: 2018-10-25
 tags: [gjs, async]
 ---

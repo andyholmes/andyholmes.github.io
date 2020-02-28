@@ -31,20 +31,25 @@ Extract and sort all tags from articles/posts, then remove duplicates
 
 <h1>Tags</h1>
 
-<p>
+<section style="margin-bottom: 2em">
 {% for tag in tags %}
 <a href="#{{ tag | slugify }}" class="tag">{{ tag }}</a>
 {% endfor %}
-</p>
-
+</section>
 
 <section class="section-listing">
 {% for tag in tags %}
-  <section>
+  <section class="tag-group">
     <h2>{{ tag }}</h2>
     {% for item in items %}
       {% if item.tags contains tag %}
-      {% include summary.html short=true %}
+      <article class="tag-entry">
+        <h3><a href="{{ item.url }}">{{ item.title }}</a></h3>
+        <time datetime="{{ item.date }}">{{ item.date | date: "%b %d, %Y" }}</time>
+        {% for tag in item.tags %}
+        <a href="/tags#{{ tag | slugify }}" class="tag">{{ tag }}</a>
+        {% endfor %}
+      </article>
       {% endif %}
     {% endfor %}
   </section>

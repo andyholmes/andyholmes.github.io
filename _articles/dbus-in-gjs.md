@@ -764,15 +764,17 @@ connection.signal_unsubscribe(handlerId);
 
 The reason [`Gio.DBusProxy`][gdbusproxy] objects are so much more convenient is
 they allow you to treat the collection of methods, properties and signals of a
-service **interface** as a discrete object.
+service **interface** as a discrete object. They can automatically cache the
+values of properties as they change, connect and group signals, watch for the
+**name owner** appearing or vanishing, and generally reduce the amount of
+boiler-plate code you have to write.
 
-They can automatically cache the values of properties as they change, connect
-and group signals, watch for the **name owner** appearing or vanishing, and
-generally reduce the amount of boiler-plate code you have to write.
-
-However, you will see in the examples below that there is still a fair amount of
-work involved when compared to the conveniences APIs that we'll be covering in
-the next section.
+Note that the constructor functions like `Gio.DBusProxy.new_sync()` as well as
+the `GInitable` functions `init()` and `init_async()` are modified so that if
+you pass a `GDBusInterfaceInfo` before the proxy is initalized GJS will generate
+the conveniences as described in the [High-Level Proxies](#high-level-proxies)
+section. To avoid this, you must set the [`g-interface-info`][g-interface-info]
+property after the proxy is initialized.
 
 
 ```js
@@ -782,17 +784,17 @@ const GLib = imports.gi.GLib;
 const Gio = imports.gi.Gio;
 
 
-// Note that the synchronous function `Gio.Initable.prototype.init()` will block
-// the main thread while getting the DBus connection and caching the initial
-// property values.
+// Note that the synchronous constructors will block the main thread while
+// getting the DBus connection and caching the initial property values.
 //
 // If the interface has no properties or you plan on doing that yourself, you
-// can pass `Gio.DBusProxyFlags.DO_NOT_LOAD_PROPERTIES` in `g_flags`. If you
-// already have a connection, you can pass it as the construct property
-// `g_connection` instead of using `g_bus_type`.
+// can use the `Gio.DBusProxyFlags.DO_NOT_LOAD_PROPERTIES` falgs. If you already
+// have a connection, you can pass it as the construct property `g_connection`
+// instead of using `g_bus_type`.
 //
-// Otherwise, you can use `init_async()` and `init_finish()` which can be
-// wrapped in a Promise like other GTask functions.
+// Otherwise, you can use asynchronous constructors like `Gio.DBusProxy.new()`,
+// `Gio.DBusProxy.new_for_bus()` or `init_async()` and `init_finish()` which can
+// be wrapped in a Promise like other GTask functions.
 let proxy = new Gio.DBusProxy({
     g_bus_type: Gio.BusType.SESSION,
     g_name: 'org.gnome.Shell',
@@ -801,9 +803,6 @@ let proxy = new Gio.DBusProxy({
     g_flags: Gio.DBusProxyFlags.NONE
 });
 
-// WARNING: the constructor functions from C like `g_dbus_proxy_new_sync()` and
-// friends that wrap the `GInitable`/`GAsyncInitable` functions are overridden
-// in GJS, so you MUST call these directly to initialize a proxy.
 proxy.init(null);
 
 // This signal is emitted when one or more properties have changed on the proxy,
@@ -866,6 +865,8 @@ let loop = GLib.MainLoop.new(null, false);
 loop.run();
 ```
 
+[g-interface-info]: https://gjs-docs.gnome.org/#q=g_interface_info
+
 #### Sub-Classing GDBusProxy
 
 The helpers currently provided by GJS will create `Gio.DBusProxy` instances with
@@ -918,14 +919,14 @@ const GnomeShell = GObject.registerClass({
     }
 }, class GnomeShell extends Gio.DBusProxy {
 
-    _init(params) {
-        super._init(Object.assign({
+    _init() {
+        super._init({
             g_bus_type: Gio.BusType.SESSION,
             g_name: 'org.gnome.Shell',
             g_object_path: '/org/gnome/Shell',
             g_interface_name: 'org.gnome.Shell',
             g_flags: Gio.DBusProxyFlags.GET_INVALIDATED_PROPERTIES
-        }, params));
+        });
     }
 
     vfunc_g_properties_changed(changed, invalidated) {
@@ -963,7 +964,7 @@ const GnomeShell = GObject.registerClass({
 
         // If you passed `Gio.DBusProxyFlags.GET_INVALIDATED_PROPERTIES` in the
         // `g_flags` argument this shouldn't happen, but if you didn't this
-        // would be your cue to call the getter on the properties interface.
+        // would be a cue to call the getter on the properties interface.
         if (value === null) {
             return false;
         }
@@ -1010,9 +1011,7 @@ const GnomeShell = GObject.registerClass({
         return null;
     }
 
-    // A simple example of a generic Promise wrapper. You could do something
-    // similar for the synchronous variant, however the default timeout for DBus
-    // methods is a gruesome 25 seconds.
+    // A simple example of a generic Promise wrapper for method calls
     _methodCall(name, args = [], signature = null, cancellable = null) {
         return new Promise((resolve, reject) => {
             this.call(
@@ -1024,7 +1023,7 @@ const GnomeShell = GObject.registerClass({
                 (proxy, result) => {
                     try {
                         let reply = proxy.call_finish(result);
-                        let value = null;
+                        let value = undefined;
 
                         if (reply.n_children() > 0) {
                             value = reply.get_child_value(0).deepUnpack();
@@ -1088,61 +1087,13 @@ loop.run();
 
 The DBus conveniences in GJS are the easiest way to get a client and cover most
 use cases. All you need to do is call `Gio.DBusProxy.makeProxyWrapper()` with
-the **interface** XML and it will create a reusable `Function` you can use to
-create proxies.
+the **interface** XML and it will create a reusable class you can use to create
+proxies.
 
-Below is a series of JSDoc style annotations describing the various functions:
-
-
-```js
-/**
- * Create a function (as described below) that returns a fully initialized
- * Gio.DBusProxy object populated with the methods, properties and signals
- * described by @interfaceXml.
- *
- * @param {string} interfaceXml - A DBus interface definition
- * @returns {function} - A Re-usable function for creating Gio.DBusProxy objects
- */
-Gio.DBusProxy.makeProxyWrapper(interfaceXml) {
-}
-
-/**
- * Create and initialize a Gio.DBusProxy object for the interface passed when
- * the function was created.
- *
- * If @asyncCallback is given (as described below), the proxy should not be
- * considered initialized until the callback is invoked successfully. If not
- * given, initialization will be synchronous and the returned `Gio.DBusProxy`
- * object is ready to use unless this function throws an Error.
- *
- * If @cancellable is given it may be used to cancel the operation. The
- * @asyncCallback will still be called if it was provided.
- *
- * If @flags is given, they will be passed to the Gio.DBusProxy constructor. The
- * default is `Gio.DBusProxyFlags.NONE`.
- *
- * @param {Gio.DBusConnection} bus - A message bus connection
- * @param {string} interface - A DBus interface name
- * @param {string} object - A DBus object path
- * @param {function} [asyncCallback] - Optional callback
- * @param {Gio.Cancellable} [cancellable] - Optional cancellable object
- * @param {Gio.DBusProxyFlags} [flags] - Optional flags argument
- * @returns {Gio.DBusProxy} - The constructed DBus proxy
- */
-function (bus, interface, object, asyncCallback, cancellable, flags) {
-}
-
-/**
- * Callback signature for the @asyncCallback argument of the above function.
- *
- * @param {Gio.DBusProxy} proxy - The source object, or %null on error
- * @param {Error} error - An `Error` object, or %null on success
- */
-function (proxy, error=null) {
-}
-```
-
-Here is an example of how the synchronous variant is used in practice:
+Below is an example of how a proxy wrapper is created from an interface and then
+used to construct an initalized proxy syncronously. Note that as above, the
+synchronous constructor will block while getting a bus connection and fetching
+the initial property values.
 
 ```js
 'use strict';
@@ -1169,12 +1120,12 @@ const ifaceXml = `
 </node>`;
 
 
-// Pass the XML string to make function that returns initialized proxies
-let createTestProxy = Gio.DBusProxy.makeProxyWrapper(ifaceXml);
+// Pass the XML string to create a proxy class for that interface
+const TestProxy = Gio.DBusProxy.makeProxyWrapper(ifaceXml);
 
 // If creating a proxy synchronously, you catch errors normally
 try {
-    let proxy = createTestProxy(
+    let proxy = new TestProxy(
         Gio.DBus.session,
         'io.github.andyholmes.Test',
         '/io/github/andyholmes/Test'
@@ -1230,8 +1181,8 @@ proxy.ComplexMethodRemote('input string', (returnValue, errorObj, fdList) => {
 
 // Signals are connected and disconnected with the functions `connectSignal()`
 // and `disconnectSignal()`, so they don't conflict with the GObject methods.
-let handlerId = proxy.connectSignal('TestSignal', (proxy, arg1, arg2) => {
-    print(`TestSignal: ${arg1}, ${arg2}`);
+let handlerId = proxy.connectSignal('TestSignal', (proxy, nameOwner, args) => {
+    print(`TestSignal: ${args[0]}, ${args[1]}`);
 
     proxy.disconnectSignal(handlerId);
 };
@@ -1241,15 +1192,78 @@ let loop = GLib.MainLoop.new(null, false);
 loop.run();
 ```
 
+At the time of writing, the convenience functions are not documented on
+<https://gjs-docs.gnome.org>. Below is a series of JSDoc annotations describing the
+signatures of the functions and returned classes:
+
+
+```js
+const Gio = imports.gi.Gio;
+
+/**
+ * Create a class (as described below) that extends Gio.DBusProxy and populates
+ * it with the methods, properties and signals described by @interfaceXml.
+ *
+ * @param {string} interfaceXml - A DBus interface definition
+ * @returns {function} - A Re-usable function for creating Gio.DBusProxy objects
+ */
+Gio.DBusProxy.makeProxyWrapper(interfaceXml) {
+}
+
+
+/**
+ * A Gio.DBusProxy extended with the methods, properties and signals described
+ * by the interface XML passed to `Gio.DBusProxy.makeProxyWrapper()`.
+ *
+ * NOTE: this is `Gio.DBusProxy` object with members added statically, not a
+ *       subclass. It is also a GObject, not a JavaScript Object.
+ */
+class Gio.DBusProxy extends GObject.Object {
+    /**
+     * Create a DBus proxy.
+     *
+     * If @asyncCallback is given (as described below), the proxy should not be
+     * considered initialized until the callback is invoked successfully. If not
+     * given, initialization will be synchronous and the returned proxy is ready
+     * to use unless an Error is thrown.
+     *
+     * If @cancellable is given it may be used to cancel the operation. The
+     * @asyncCallback will still be called if it was provided.
+     *
+     * If @flags is given, they will be passed to the Gio.DBusProxy constructor. The
+     * default is `Gio.DBusProxyFlags.NONE`.
+     *
+     * @param {Gio.DBusConnection} bus - A message bus connection
+     * @param {string} interface - A DBus interface name
+     * @param {string} object - A DBus object path
+     * @param {ProxyWrapper~asyncCallback} [asyncCallback] - Optional callback
+     * @param {Gio.Cancellable} [cancellable] - Optional cancellable object
+     * @param {Gio.DBusProxyFlags} [flags] - Optional flags argument
+     */
+    constructor(bus, interface, object, asyncCallback, cancellable, flags) {
+    }
+}
+
+/**
+ * Asychronous callback for the proxy wrapper constructor.
+ *
+ * @callback ProxyWrapper~asyncCallback
+ * @param {Gio.DBusProxy} proxy - The source object, or %null on error
+ * @param {Error} error - An `Error` object, or %null on success
+ */
+function (proxy, error=null) {
+}
+```
+
 For demonstration purposes, here is an example of how you might wrap the
-asychronous constructor and method calls in a Promise:
+asychronous constructor in a Promise:
 
 ```js
 // Since this is our interface, we know which bus, name and object path to
 // expect it on, but you could add arguments for any of those if necessary.
 function createTestProxyAsync(cancellable = null, flags = Gio.DBusProxyFlags.NONE) {
     return new Promise((resolve, reject) => {
-        createTestProxy(
+        new TestProxy(
             Gio.DBus.session,
             'io.github.andyholmes.Test',
             '/io/github/andyholmes/Test'
@@ -1295,23 +1309,20 @@ const GLib = imports.gi.GLib;
 
 // These three functions are the callbacks to `Gio.bus_own_name_on_bus()`:
 
-// If there is a client waiting for the well-known name to appear on the bus so
-// it can create proxies for the interfaces, you probably want to export your
-// interfaces here so they are already available when the name appears.
+// If there is a client waiting for the well-known name to appear on the bus,
+// you probably want to export your interfaces.
 function onBusAcquired(connection, name) {
     print(`${name}: connection acquired`);
 }
 
 // On the other hand, if you were using something like GDBusObjectManager to
-// watch for interfaces, you might export your interfaces here using the methods
-// of your GDBusObjectManagerServer instance.
+// watch for interfaces, you could export your interfaces here.
 function onNameAcquired(connection, name) {
     print(`${name}: name acquired`);
 }
 
-// Typically you won't see this method invoked. The only situations this might
-// happen is if you tried to own a name that was already owned by someone else
-// like `org.gnome.Shell` or if the DBus connection was closed (very rare).
+// Typically you won't see this callback invoked, but it might happen if you try
+// to own a name that was already owned by someone else.
 function onNameLost(connection, name) {
     print(`${name}: name lost`);
 }
@@ -1343,7 +1354,7 @@ loop.run();
 Expected output:
 
 ```
-io.github.andyholmes.Test: session bus acquired
+io.github.andyholmes.Test: connection acquired
 io.github.andyholmes.Test: name acquired
 io.github.andyholmes.Test: unowning name
 ```
@@ -1351,7 +1362,7 @@ io.github.andyholmes.Test: unowning name
 Expected out if you tried to own an existing name:
 
 ```
-org.gnome.Shell: session bus acquired
+org.gnome.Shell: connection acquired
 org.gnome.Shell: name lost
 org.gnome.Shell: unowning name
 ```

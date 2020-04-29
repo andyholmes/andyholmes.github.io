@@ -619,7 +619,7 @@ const Gio = imports.gi.Gio;
  * @param {Gio.Cancellable} [cancellable] - optional cancellable object
  * @returns {Promise<boolean>} - The process success
  */
-function execCheck(argv, cancellable = null) {
+async function execCheck(argv, cancellable = null) {
     let cancelId = 0;
     let proc = new Gio.Subprocess({
         argv: argv,
@@ -668,7 +668,7 @@ function execCheck(argv, cancellable = null) {
  * @param {Gio.Cancellable} [cancellable] - optional cancellable object
  * @returns {Promise<string>} - The process output
  */
-function execCommunicate(argv, input = null, cancellable = null) {
+async function execCommunicate(argv, input = null, cancellable = null) {
     let cancelId = 0;
     let flags = (Gio.SubprocessFlags.STDOUT_PIPE |
                  Gio.SubprocessFlags.STDERR_PIPE);

@@ -443,76 +443,80 @@ Gjs-Message: 18:50:04.043: JS LOG: 10mb finished, 40ms elapsed
 `Gio.Subprocess` is similar to `subprocess.py` in Python, allowing you to spawn
 and communicate with applications asynchronously using the GTask API. It is
 preferred over GLib's lower-level functions since it automatically reaps child
-processes avoiding zombie processes and prevents dangling file descriptors. This
-is especially important in GJS because of how "out" parameters are handled.
+processes avoiding zombie processes and prevents dangling file descriptors.
 
-Consider the following snippet using `GLib.spawn_async_with_pipes()`. In other
-languages we would pass "in" `null` as a function argument for pipes like
-`stdin` that we don't plan on using, preventing them from being opened. In GJS
-all three pipes are opened implicitly and must be explicitly closed, or we may
-eventually get a *"Too many open files"* error.
-
-```js
-let [ok, pid, stdin, stdout, stderr] = GLib.spawn_async_with_pipes(
-    null,                   // working directory
-    ['ls' '-la'],           // argv
-    null,                   // envp
-    GLib.SpawnFlags.NONE,   // flags
-    null                    // child_setup function
-);
-```
-
-Let's try a simple exercise of using `Gio.Subprocess` to execute `ls -a` in the
-current directory then log the output manually.
+For a longer article about spawning subprocesses in GJS with more examples, see
+[Subprocesses in GJS]({% link _articles/subprocesses-in-gjs.md %}). Below is a
+simple example using one the complete examples to execute `ls -a` in the current
+directory then log the output:
 
 ```js
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 
-let loop = GLib.MainLoop.new(null, false);
 
-async function execCommand(argv, cancellable=null) {
-    try {
-        // There is also a reusable Gio.SubprocessLauncher class available
-        let proc = new Gio.Subprocess({
-            argv: argv,
-            // There are also other types of flags for merging stdout/stderr,
-            // redirecting to /dev/null or inheriting the parent's pipes
-            flags: Gio.SubprocessFlags.STDOUT_PIPE
-        });
-        
-        // Classes that implement GInitable must be initialized before use, but
-        // an alternative in this case is to use Gio.Subprocess.new(argv, flags)
-        //
-        // If the class implements GAsyncInitable then Class.new_async() could
-        // also be used and awaited in a Promise.
-        proc.init(null);
+/**
+ * Execute a command asynchronously and return the output from `stdout` on
+ * success or throw an error with output from `stderr` on failure.
+ *
+ * If given, @input will be passed to `stdin` and @cancellable can be used to
+ * stop the process before it finishes.
+ *
+ * @param {string[]} argv - a list of string arguments
+ * @param {string} [input] - Input to write to `stdin` or %null to ignore
+ * @param {Gio.Cancellable} [cancellable] - optional cancellable object
+ * @returns {Promise<string>} - The process output
+ */
+async function execCommunicate(argv, input = null, cancellable = null) {
+    let cancelId = 0;
+    let flags = (Gio.SubprocessFlags.STDOUT_PIPE |
+                 Gio.SubprocessFlags.STDERR_PIPE);
 
-        let stdout = await new Promise((resolve, reject) => {
-            // communicate_utf8() returns a string, communicate() returns a
-            // a GLib.Bytes and there are "headless" functions available as well
-            proc.communicate_utf8_async(null, cancellable, (proc, res) => {
-                let ok, stdout, stderr;
+    if (input !== null)
+        flags |= Gio.SubprocessFlags.STDIN_PIPE;
 
-                try {
-                    [ok, stdout, stderr] = proc.communicate_utf8_finish(res);
-                    resolve(stdout);
-                } catch (e) {
-                    reject(e);
-                }
-            });
-        });
-
-        return stdout;
-    } catch (e) {
-        logError(e);
+    let proc = new Gio.Subprocess({
+        argv: argv,
+        flags: flags
+    });
+    proc.init(cancellable);
+    
+    if (cancellable instanceof Gio.Cancellable) {
+        cancelId = cancellable.connect(() => proc.force_exit());
     }
+
+    return new Promise((resolve, reject) => {
+        proc.communicate_utf8_async(input, null, (proc, res) => {
+            try {
+                let [, stdout, stderr] = proc.communicate_utf8_finish(res);
+                let status = proc.get_exit_status();
+
+                if (status !== 0) {
+                    throw new Gio.IOErrorEnum({
+                        code: Gio.io_error_from_errno(status),
+                        message: stderr ? stderr.trim() : GLib.strerror(status)
+                    });
+                }
+
+                resolve(stdout.trim());
+            } catch (e) {
+                reject(e);
+            } finally {
+                if (cancelId > 0) {
+                    cancellable.disconnect(cancelId);
+                }
+            }
+        });
+    });
 }
 
-execCommand(['ls', '-a']).then(stdout => {
+// Run the command
+let loop = GLib.MainLoop.new(null, false);
+
+execCommunicate(['ls', '-a']).then(stdout => {
     stdout.split('\n').map(line => log(line));
     loop.quit();
-});
+}).catch(logError);
 
 loop.run();
 ```

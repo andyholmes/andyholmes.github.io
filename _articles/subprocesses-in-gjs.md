@@ -14,6 +14,9 @@ You can find the API documentation for GJS at <https://gjs-docs.gnome.org/>.
 ## Table of Contents
 
 1. [GLib](#glib)
+  * [Synchronous Execution](#synchronous-execution)
+  * [Asynchronous Execution](#asynchronous-execution)
+  * [Asynchronous Communication](#asynchronous-communication)
 2. [GSubprocess](#gsubprocess)
   * [Basic Usage](#basic-usage)
   * [Watiting for Processes](#waiting-for-processes)
@@ -28,9 +31,17 @@ GLib actually includes a number of utilities for working with subprocesses, but
 many applications written in C don't even use them. As a rule, you should always
 look in the higher-level Gio before you look in GLib for a utility.
 
-This first example is very common to see in GNOME Shell extensions, which is the
-worst place to use it. This process will run synchronously, do I/O on the main
-thread, blocking the whole desktop until it completes:
+Skip ahead to [GSubprocess](#gsubprocess) if you aren't interested in why GLib's
+spawn functions are less preferrable.
+
+### Synchronous Execution
+
+This first example is very common to see in GNOME Shell extensions, which
+happens to be the worst place to use it.
+
+Remember that the main thread of GNOME Shell is where user input and events are
+happening. This process will run synchronously, doing I/O on the main thread,
+blocking all other code from executing until it's finished:
 
 ```js
 'use strict';
@@ -62,8 +73,12 @@ let loop = GLib.MainLoop.new(null, false);
 loop.run();
 ```
 
-A fair number of programmer's will figure out there's an asynchronous version of
-this function, but find it doesn't quite suit their needs:
+### Asynchronous Execution
+
+It is also possible to spawn simple processes asynchronously with GLib. Notice
+however, the function demonstrated below won't give you an indication of whether
+the process completed successfully (only if it started), when it completed or
+any output from it.
 
 ```js
 'use strict';
@@ -81,8 +96,14 @@ try {
 }
 ```
 
-Better dig deeper. Below is how you might spawn a process asychronously with
-`GLib.spawn_async_with_pipes()`, collect the output and check for errors.
+### Asynchronous Communication
+
+It's also possible to communicate with a process spawned by GLib and check it's
+exit status. To do so, we'll need to open all three pipes (`stdin`, `stdout` and
+`stderr`), close the ones we don't need, collect the output and add a child
+watch to be notified when it completes.
+
+Below is how you might do that with `GLib.spawn_async_with_pipes()`:
 
 
 ```js
@@ -125,8 +146,8 @@ try {
         null
     );
 
-    // Any streams we don't want we have to close any ways, otherwise we may
-    // leak the file descriptors
+    // Any unsused streams still have to be closed explicitly, otherwise the
+    // file descriptors may be left open
     GLib.close(stdin);
 
     // Okay, now let's get output stream for `stdout`
@@ -180,7 +201,7 @@ loop.run();
 
 Depending on your use case you could simplify the above somewhat, but this is
 quite a bit more work that using `Gio.Subprocess`. You can see the example below
-of [communicating with a subprocess](#communicating-with-subprocesses) for a
+of [communicating with a subprocess](#communicating-with-processes) for a
 comparison.
 
 

@@ -27,7 +27,7 @@ You can find the API documentation for GJS at <https://gjs-docs.gnome.org/>.
 ## Table of Contents
 
 1. [Introduction to DBus](#introduction-to-dbus)
-   * [Bus Structure](#service-structure)
+   * [Bus Structure](#bus-structure)
    * [Bus Types](#bus-types)
    * [Bus Connections](#bus-connections)
    * [Arguments and Values](#arguments-and-values)
@@ -231,7 +231,7 @@ const Gio = imports.gi.Gio;
 function getNewConnection(busType = Gio.BusType.SESSION, cancellable = null) {
     return new Promise((resolve, reject) => {
         Gio.DBusConnection.new_for_address(
-            Gio.dbus_address_get_for_bus_sync(Gio.BusType.SESSION, cancellable),
+            Gio.dbus_address_get_for_bus_sync(busType, cancellable),
             Gio.DBusConnectionFlags.AUTHENTICATION_CLIENT |
             Gio.DBusConnectionFlags.MESSAGE_BUS_CONNECTION,
             null,
@@ -511,7 +511,7 @@ dbusInfo.cache_build();
 
 Clients for DBus services are often referred to as **proxies**, and libraries for
 for many services like Evolution Data Server are either wrappers or subclasses
-of [Gio.DBusProxy][gdbusproxy]. It's also possible to call methods and connect
+of [`Gio.DBusProxy`][gdbusproxy]. It's also possible to call methods and connect
 signals directly on a **bus connection**.
 
 Previously, we mentioned that some services support DBus Activation which allows
@@ -788,7 +788,7 @@ const Gio = imports.gi.Gio;
 // getting the DBus connection and caching the initial property values.
 //
 // If the interface has no properties or you plan on doing that yourself, you
-// can use the `Gio.DBusProxyFlags.DO_NOT_LOAD_PROPERTIES` falgs. If you already
+// can use the `Gio.DBusProxyFlags.DO_NOT_LOAD_PROPERTIES` flags. If you already
 // have a connection, you can pass it as the construct property `g_connection`
 // instead of using `g_bus_type`.
 //
@@ -1310,7 +1310,8 @@ const GLib = imports.gi.GLib;
 // These three functions are the callbacks to `Gio.bus_own_name_on_bus()`:
 
 // If there is a client waiting for the well-known name to appear on the bus,
-// you probably want to export your interfaces.
+// you probably want to export your interfaces here. This way the interfaces are
+// ready to be used when the client is notified the name has been owned.
 function onBusAcquired(connection, name) {
     print(`${name}: connection acquired`);
 }
@@ -1768,7 +1769,7 @@ let testService = new TestService({
 
 // Once we're all connected up we can export the interface on a connection at
 // a bus path.
-iface.export(Gio.DBus.session, '/io/github/andyholmes/Test');
+testService.export(Gio.DBus.session, '/io/github/andyholmes/Test');
 
 // As previously mentioned, you'll usually own a name at this point, *after* the
 // interface is exported, in case clients are waiting for a well-known name to
@@ -1780,8 +1781,8 @@ iface.export(Gio.DBus.session, '/io/github/andyholmes/Test');
 
 // You can unexport the name from a specific connection or, if for some reason
 // you have exported the interface on more than one, all connections at once.
-iface.unexport_from_connection(Gio.DBus.session);
-iface.unexport();
+testService.unexport_from_connection(Gio.DBus.session);
+testService.unexport();
 ```
 
 [gdbus-codegen]: https://developer.gnome.org/gio/stable/gdbus-codegen.html
@@ -1957,7 +1958,7 @@ let groupId = connection.export_action_group(
 connection.unexport_action_group(groupId);
 ```
 
-One the client-side you can use [`Gio.DBusActionGroup`][gdbusactiongroup] as a
+On the client-side you can use [`Gio.DBusActionGroup`][gdbusactiongroup] as a
 simple way to watch for new and removed actions, state changes and the enabled
 or disabled state of each:
 

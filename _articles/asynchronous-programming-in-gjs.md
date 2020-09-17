@@ -581,21 +581,6 @@ service.connect('incoming', async (service, connection, source_object) => {
 loop.run();
 ```
 
-On the topic of GSignals, if subclassing a GObject `vfunc_` overrides often have
-much less overhead than callbacks, especially for signals that are frequently
-emitted. There are good opportunities to improve performance for many common and
-low-level signals like `GtkWidget::draw`:
-
-```js
-var MyWidget = GObject.registerClass({
-    GTypeName: 'MyWidget'
-}, class MyWidget extends Gtk.DrawingArea {
-    vfunc_draw(cr) {
-        cr.$dispose();
-        return false;
-    }
-});
-```
 
 [gsignal-lock]: https://gitlab.gnome.org/GNOME/glib/blob/master/gobject/gsignal.c#L3179
 [gtask]: https://developer.gnome.org/gio/stable/GTask.html

@@ -241,8 +241,11 @@ const GLib = imports.gi.GLib;
  *
  * @param {number} priority - The priority of the idle source
  */
-Promise.idle = function(priority) {
-    return new Promise(resolve => GLib.idle_add(priority, resolve));
+Promise.idle = function (priority = GLib.PRIORITY_DEFAULT_IDLE) {
+    return new Promise(resolve => GLib.idle_add(priority, () => {
+        resolve();
+        return GLib.SOURCE_REMOVE;
+    }));
 };
 
 /**
@@ -252,7 +255,10 @@ Promise.idle = function(priority) {
  * @param {number} interval - Delay in milliseconds before resolving
  */
 Promise.timeout = function(priority = GLib.PRIORITY_DEFAULT, interval = 100) {
-    return new Promise(resolve => GLib.timeout_add(priority, interval, resolve));
+    return new Promise(resolve => GLib.timeout_add(priority, interval, () => {
+        resolve();
+        return Glib.SOURCE_REMOVE;
+    }));
 };
 
 /**
@@ -262,7 +268,10 @@ Promise.timeout = function(priority = GLib.PRIORITY_DEFAULT, interval = 100) {
  * @param {number} interval - Delay in seconds before resolving
  */
 Promise.timeoutSeconds = function(priority = GLib.PRIORITY_DEFAULT, interval = 1) {
-    return new Promise(resolve => GLib.timeout_add_seconds(priority, interval, resolve));
+    return new Promise(resolve => GLib.timeout_add_seconds(priority, interval, () => {
+        resolve();
+        return Glib.SOURCE_REMOVE;
+    }));
 };
 
 let start = Date.now();

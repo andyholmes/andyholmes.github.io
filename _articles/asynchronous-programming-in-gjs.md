@@ -474,7 +474,7 @@ const GLib = imports.gi.GLib;
  * @param {string[]} argv - a list of string arguments
  * @param {string} [input] - Input to write to `stdin` or %null to ignore
  * @param {Gio.Cancellable} [cancellable] - optional cancellable object
- * @returns {Promise<string>} - The process output
+ * @returns {Promise<string>} The process output
  */
 async function execCommunicate(argv, input = null, cancellable = null) {
     let cancelId = 0;
@@ -490,9 +490,8 @@ async function execCommunicate(argv, input = null, cancellable = null) {
     });
     proc.init(cancellable);
     
-    if (cancellable instanceof Gio.Cancellable) {
+    if (cancellable instanceof Gio.Cancellable)
         cancelId = cancellable.connect(() => proc.force_exit());
-    }
 
     return new Promise((resolve, reject) => {
         proc.communicate_utf8_async(input, null, (proc, res) => {
@@ -511,9 +510,8 @@ async function execCommunicate(argv, input = null, cancellable = null) {
             } catch (e) {
                 reject(e);
             } finally {
-                if (cancelId > 0) {
+                if (cancelId > 0)
                     cancellable.disconnect(cancelId);
-                }
             }
         });
     });

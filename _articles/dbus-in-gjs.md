@@ -1544,7 +1544,7 @@ const TestInterface = GObject.registerClass({
             // ...but if it was a JavaScript Error instance, we need to do some
             // more work to prepare it for DBus
             } else {
-                if (e.name.includes('.')) {
+                if (!e.name.includes('.')) {
                     e.name = `org.gnome.gjs.JSError.${e.name}`;
                 }
 

@@ -200,18 +200,10 @@ main .external-link:after {
   margin-left: 0.125em;
 }
 
-.social i {
-  vertical-align: middle;
-}
-
-.social img {
+.social a svg {
   display: inline;
-  margin: 0px;
-  padding: 0px;
-  border: 0px;
+  fill: currentColor;
   width: 1em;
-  height: 1em;
-  -webkit-box-shadow: none;
-  vertical-align: middle;
+  height: auto;
 }
 

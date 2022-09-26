@@ -2,7 +2,6 @@
 layout: article
 title: Evolution Contacts in GJS
 date: 2019-12-16
-tags: [gjs]
 ---
 
 This is an overview of basic interaction with Evolution Data Server in GJS,

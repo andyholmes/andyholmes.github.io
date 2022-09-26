@@ -1,0 +1,12 @@
+
+/* External Links */
+main .external-link:after {
+  content: '\a0\f35d';
+  font-family: 'Font Awesome 5 Free';
+  font-weight: bold;
+  font-size: 0.5em;
+  vertical-align: super;
+  text-decoration: none;
+  display: inline-block;
+}
+

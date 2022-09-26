@@ -1,12 +1,14 @@
 ---
 layout: default
-title: Articles
+title: Archive
 ---
 
 <section class="section-listing">
-  <h2>Articles</h2>
+  <h2>Archive</h2>
 
-  {% for item in site.articles %}
+  {% assign articles = site.articles | sort: "date" | reverse %}
+
+  {% for item in articles %}
   {% include summary.html %}
   {% endfor %}
 </section>

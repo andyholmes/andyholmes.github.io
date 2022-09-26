@@ -2,7 +2,6 @@
 layout: article
 title: DBus in GJS
 date: 2020-02-16
-tags: [gjs, dbus]
 ---
 
 This article has moved to [D-Bus][d-bus] on [gjs.guide][gjs-guide].

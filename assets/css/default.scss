@@ -1,0 +1,226 @@
+---
+---
+
+/* Common Styles */
+@import '/assets/css/base.css';
+
+/* Code Highlighting */
+@import '/assets/css/code.css' screen;
+
+/* Extra Link Formatting */
+@import '/assets/css/links.css' screen;
+
+
+/*
+ * Layout
+ */
+.content {
+  margin: 0 auto;
+  max-width: 900px;
+}
+
+
+/*
+ * Header
+ */
+header {
+  font-size: 1.25em;
+  padding: 2rem 0;
+}
+
+header div.content {
+  display: flex;
+}
+
+header #logo {
+  border-radius: 50%;
+  height: 48px;
+  width: 48px;
+  margin: 0 2rem;
+  overflow: hidden;
+}
+
+nav {
+  margin: auto 0;
+}
+
+nav a {
+  border-radius: 0.5em;
+  margin-right: 1em;
+  padding: 0.5em 1em;
+  text-align: center;
+  text-decoration: none;
+  transition: all 250ms ease-in-out;
+}
+
+/*
+ * Main
+ */
+main a {
+  text-decoration: none;
+}
+
+main a:focus,
+main a:hover {
+  text-decoration: underline;
+}
+
+main div.content {
+  padding: 1rem;
+}
+
+/*
+ * Footer
+ */
+footer {
+  padding: 2rem 0;
+}
+
+footer div.content {
+  position: relative;
+}
+
+#copyright {
+  font-size: smaller;
+  margin: 0 auto;
+  text-align: center;
+}
+
+#copyright a {
+  text-decoration: none;
+}
+
+#copyright a:focus,
+#copyright a:hover {
+  text-decoration: underline;
+}
+
+.social {
+  position: absolute;
+  right: 1rem;
+  top: 0rem;
+  text-align: right;
+}
+
+.social a {
+  margin-left: 0.5rem;
+  text-decoration: none;
+}
+
+.social a svg {
+  fill: currentColor;
+  height: 1.5rem;
+  width: 1.5rem;
+}
+
+
+/*
+ * Articles
+ */
+.article-header {
+  margin: 1rem 0 2rem 0;
+}
+
+article.summary {
+  border-top: 1px dashed var(--border);
+  padding: 1rem 0;
+}
+
+/* Sections */
+.section-listing {
+}
+
+.section-listing h3 {
+  display: inline;
+}
+
+.section-listing time {
+  float: right;
+}
+
+
+/*
+ * Theme
+ */
+body {
+  background-color: var(--dark-background);
+  color: var(--dark-foreground);
+}
+
+body a {
+  color: currentColor;
+}
+
+nav a:hover {
+  background-color: var(--dark-prelight);
+}
+
+main {
+  background-color: var(--light-background);
+  color: var(--light-foreground);
+}
+
+main a {
+  color: var(--blue5);
+}
+
+code,
+pre.highlight {
+  background-color: rgba(255, 255, 255, 0.75);
+}
+
+kbd {
+  background-color: var(--light3);
+  color: currentColor;
+}
+
+@media (prefers-color-scheme: light) {
+  body {
+    background-color: var(--dark-background);
+    color: var(--dark-foreground);
+  }
+
+  main {
+    background-color: var(--light-background);
+    color: var(--light-foreground);
+  }
+
+  main a {
+    color: var(--blue5);
+  }
+
+  code,
+  pre.highlight {
+    background-color: rgba(255, 255, 255, 0.75);
+  }
+
+  kbd {
+    background-color: var(--light3);
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: rgb(30, 30, 30); /* make the header/footer a bit darker */
+    color: var(--dark-foreground);
+  }
+
+  main {
+    background-color: var(--dark-background);
+    color: var(--dark-foreground);
+  }
+
+  main a {
+    color: var(--blue1);
+  }
+
+  code,
+  pre.highlight {
+    background-color: rgba(0, 0, 0, 0.25);
+  }
+
+  kbd {
+    background-color: var(--dark3);
+  }
+}
+

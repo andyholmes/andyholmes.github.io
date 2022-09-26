@@ -2,7 +2,6 @@
 layout: article
 title: Asynchronous Programming in GJS
 date: 2018-10-25
-tags: [gjs, async]
 ---
 
 This article has moved to [Asynchronous Programming][asynchronous-programming]

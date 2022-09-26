@@ -1,7 +1,7 @@
 ---
 layout: article
 title: Peas and GNOME Shell
-date: 2022-09-19
+date: 2022-09-26
 ---
 
 [libpeas] is GObject-based plugin engine, allowing applications to adopt a

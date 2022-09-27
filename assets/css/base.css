@@ -61,8 +61,7 @@
   --light-prelight: rgba(0,0,0,0.1);
 
   /* Defaults */
-  --border: rgba(0,0,0,0.25);
-  --prelight: rgba(250,250,250,0.1);
+  --borders: rgba(0,0,0,0.25);
 }
 
 /*
@@ -128,7 +127,7 @@ hgroup h3 {
 
 kbd {
   border-radius: 0.25em;
-  box-shadow: inset -0.1em -0.1em 0 var(--border);
+  box-shadow: inset -0.1em -0.1em 0 var(--borders);
   padding: 0.1em 0.5em;
 }
 

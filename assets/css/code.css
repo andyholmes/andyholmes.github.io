@@ -44,11 +44,11 @@ pre.highlight code {
 /*
  * Clipboard Button
  */
-pre.highlight {
+div.highlight {
   position: relative;
 }
 
-pre.highlight > button {
+div.highlight > button {
   background-color: rgba(127,127,127,0.5);
   border-radius: 0.25em;
   border: none;
@@ -62,16 +62,16 @@ pre.highlight > button {
   height: 32px;
 }
 
-pre.highlight:hover > button {
+div.highlight:hover > button {
   opacity: 1;
 }
 
-pre.highlight > button:hover,
-pre.highlight > button:focus {
+div.highlight > button:hover,
+div.highlight > button:focus {
   background-color: rgba(127,127,127,0.75);
 }
 
-pre.highlight > button:active {
+div.highlight > button:active {
   background-color: rgba(127,127,127,0.5);
 }
 

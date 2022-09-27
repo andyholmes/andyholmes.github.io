@@ -1,5 +1,5 @@
 // assets/js/post.js
-var codeBlocks = document.querySelectorAll('pre.highlight');
+var codeBlocks = document.querySelectorAll('div.highlight');
 
 codeBlocks.forEach((element) => {
     const button = document.createElement('button');

@@ -1,5 +1,4 @@
 .buildconfig
-.jekyll-cache
-.jekyll-metadata
-.sass-cache
-_site
+
+_site/
+node_modules/

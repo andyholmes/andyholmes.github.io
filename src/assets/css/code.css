@@ -1,0 +1,42 @@
+/* Code Highlighting */
+@import "/assets/css/code.light.css" screen;
+@import "/assets/css/code.dark.css" screen and (prefers-color-scheme: dark);
+
+
+/*
+ * Inline Code
+ */
+a code {
+  text-decoration: underline;
+}
+
+code {
+  border-radius: 0.25em;
+  padding: 1px 0.625ch;
+  white-space: nowrap;
+}
+
+:not(pre) > code {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+/*
+ * Code Blocks
+ */
+pre[class*="language-"] {
+  border: 1px solid var(--borders);
+  border-radius: 1ch;
+  margin: 0;
+  overflow: scroll;
+}
+
+pre[class*="language-"]::-webkit-scrollbar {
+  width: 0px;
+}
+
+pre[class*="language-"] > code[class*="language-"] {
+  display: block;
+  padding: 0.5ch;
+  white-space: pre;
+  width: 81ch;
+}

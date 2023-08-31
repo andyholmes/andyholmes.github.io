@@ -1,34 +1,55 @@
-<!DOCTYPE html>
-<html lang="{{ site.lang | default: 'en-US' }}">
+<!doctype html>
+<html lang="{{ metadata.language }}">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  {% include head.html %}
+    <title>{% if title %}{{ title }} | {% endif %}{{ metadata.title }}</title>
+    <meta name="description" content="{{ description or metadata.description }}"/>
+    <link rel="canonical" href="{{ page.url | absoluteUrl(metadata.url) }}"/>
 
+    <meta property="og:title" content="{% if title %}{{ title }} | {% endif %}{{ metadata.title }}"/>
+    <meta property="og:description" content="{{ description or metadata.description }}"/>
+    <meta property="og:locale" content="{{ metadata.locale }}"/>
+    <meta property="og:site_name" content="{{ metadata.title }}"/>
+    <meta property="og:url" content="{{ page.url | absoluteUrl(metadata.url) }}"/>
+    <meta property="og:type" content="article"/>
+
+    <link rel="alternate" href="/feed.xml" type="application/atom+xml" title="{{ metadata.title }}">
+
+    <style>
+      {%- css %}{% include "../assets/css/base.css" %}{% endcss %}
+      {%- css %}{% include "../assets/css/index.css" %}{% endcss %}
+      {% getBundle "css" %}
+    </style>
+  </head>
   <body>
+    <a href="#content" class="visually-hidden">Skip to content</a>
+
     <header>
       <div class="content">
         <div id="logo">
           <a href="/">
-            <img src="https://gravatar.com/avatar/d782873c25fc92ccadf8e81cd9771bea?s=48" alt="Andy Holmes avatar"/>
+            <img src="https://gravatar.com/avatar/d782873c25fc92ccadf8e81cd9771bea?s=48" alt="{{ metadata.title }}" width="48" height="48"/>
           </a>
         </div>
         <nav>
-          {% for item in site.data.navigation %}
-            <a href="{{ item.link }}">{{ item.name }}</a>
-          {% endfor %}
+          <a href="/"{% if page.url == "/" %} aria-current="page"{% endif %}>Home</a>
+          <a href="/posts/"{% if page.url == "/posts/" %} aria-current="page"{% endif %}>Archive</a>
         </nav>
       </div>
     </header>
 
-    <main>
+    <main id="content">
       <div class="content">
-        {{ content }}
+        {{ content | safe }}
       </div>
     </main>
 
     <footer>
       <div class="content">
         <div id="copyright">
-          &copy; 2022 <a href="https://andyholmes.ca/">Andy Holmes</a>
+          &copy; <a href="https://andyholmes.ca/">Andy Holmes</a>
         </div>
 
         <div class="social">
@@ -52,4 +73,3 @@
     </footer>
   </body>
 </html>
-

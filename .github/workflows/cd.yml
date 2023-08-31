@@ -15,9 +15,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Build
+      - name: Setup
         run: |
           npm ci
+
+      - name: Test
+        run: |
+          npm test
+
+      - name: Build
+        run: |
           npm run build
 
       - name: Bundle

@@ -60,6 +60,9 @@
   --light-foreground: rgb(61,56,70);
   --light-prelight: rgba(0,0,0,0.1);
 
+  --dim-label: color-mix(in srgb, currentColor 75%, transparent);
+  --dim-borders: color-mix(in srgb, currentColor 12.5%, transparent);
+
   /* Defaults */
   --borders: rgba(0,0,0,0.25);
 }
@@ -119,12 +122,6 @@ h4 {
   font-size: 1rem;
 }
 
-hgroup h1,
-hgroup h2,
-hgroup h3 {
-  margin: 0;
-}
-
 kbd {
   border-radius: 0.25em;
   box-shadow: inset -0.1em -0.1em 0 var(--borders);
@@ -144,8 +141,8 @@ kbd {
  * Helper Classes
  */
 .dim-label {
-   opacity: 0.75;
- }
+  opacity: 0.75;
+}
 
 .disabled {
   opacity: 0.5;
@@ -156,6 +153,39 @@ kbd {
 .disabled:focus,
 .disabled:hover {
   background-color: revert;
+}
+
+/* https://www.a11yproject.com/posts/how-to-hide-content/ */
+.visually-hidden:not(:focus):not(:active) {
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+/*
+ * Pill Button
+ */
+a.pill {
+  display: inline-block;
+  transition: all 250ms ease-in-out;
+
+  font-weight: bold;
+  font-size: 1.125rem;
+  text-align: center;
+  text-decoration: none;
+
+  border-radius: 2em;
+  padding: 0.5em 1.5em;
+}
+
+a.pill:focus,
+a.pill:hover {
+  text-decoration: none;
+  filter: brightness(1.125);
 }
 
 /*

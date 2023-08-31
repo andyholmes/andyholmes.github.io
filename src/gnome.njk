@@ -1,0 +1,28 @@
+---
+permalink: /gnome.xml
+eleventyExcludeFromCollections: true
+---
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>{{ metadata.title }}</title>
+    <description>{{ metadata.description }}</description>
+    <link>{{ metadata.url | addPathPrefixToFullUrl }}</link>
+    <atom:link href="{{ permalink | absoluteUrl(metadata.url) }}" rel="self" type="application/rss+xml"/>
+    <pubDate>{{ collections.gnome | getNewestCollectionItemDate | dateToRfc822 }}</pubDate>
+    <lastBuildDate>{{ collections.gnome | getNewestCollectionItemDate | dateToRfc822 }}</lastBuildDate>
+    {%- for post in collections.gnome | reverse %}
+    {% set absolutePostUrl = post.url | absoluteUrl(metadata.url) %}
+    <item>
+      <title>{{ post.data.title }}</title>
+      <description>{{ post.data.description }}</description>
+      <pubDate>{{ post.date | dateToRfc822 }}</pubDate>
+      <link>{{ absolutePostUrl }}</link>
+      <guid isPermaLink="true">{{ absolutePostUrl }}</guid>
+      {% for cat in post.categories %}
+      <category>{{ cat | xml_escape }}</category>
+      {% endfor %}
+    </item>
+    {%- endfor %}
+  </channel>
+</rss>

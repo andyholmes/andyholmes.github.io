@@ -1,0 +1,15 @@
+---
+layout: base
+eleventyExcludeFromCollections: true
+---
+<h1>Archive</h1>
+
+<section>
+{% for post in collections.posts | reverse %}
+  <article class="post-summary" aria-labelledby="{{ post.data.title | slugify }}">
+    <h3 id="{{ post.data.title | slugify }}"><a href="{{ post.url }}">{{ post.data.title }}</a></h3>
+    <time datetime="{{ post.date | htmlDateString }}">{{ post.date | readableDate }}</time>
+    <p>{% excerpt post %}</p>
+  </article>
+{% endfor %}
+</section>

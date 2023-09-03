@@ -15,7 +15,7 @@ eleventyExcludeFromCollections: true
     {% set absolutePostUrl = post.url | absoluteUrl(metadata.url) %}
     <item>
       <title>{{ post.data.title }}</title>
-      <description>{{ post.data.description }}</description>
+      <description>{{ post.templateContent | htmlToAbsoluteUrls(absolutePostUrl) }}</description>
       <pubDate>{{ post.date | dateToRfc822 }}</pubDate>
       <link>{{ absolutePostUrl }}</link>
       <guid isPermaLink="true">{{ absolutePostUrl }}</guid>

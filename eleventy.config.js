@@ -42,7 +42,7 @@ module.exports = function(eleventyConfig) {
             page.data.layout = 'post';
 
             if (process.env.NODE_ENV === 'production')
-                page.data.date = 'git Created';
+                page.data.date = 'git Last Modified';
 
             return page;
         });

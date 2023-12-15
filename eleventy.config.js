@@ -1,5 +1,3 @@
-const process = require('process');
-
 const { EleventyHtmlBasePlugin } = require('@11ty/eleventy');
 const pluginBundle = require('@11ty/eleventy-plugin-bundle');
 const pluginRss = require('@11ty/eleventy-plugin-rss');
@@ -41,8 +39,10 @@ module.exports = function(eleventyConfig) {
         return collection.getFilteredByGlob('./src/posts/*.md').map(page => {
             page.data.layout = 'post';
 
-            if (process.env.NODE_ENV === 'production')
-                page.data.date = 'git Last Modified';
+            /* FIXME: this chokes up in GitHub's CI
+             if (process.env.NODE_ENV === 'production')
+                 page.data.date = 'git Created';
+             */
 
             return page;
         });

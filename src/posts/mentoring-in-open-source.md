@@ -1,5 +1,6 @@
 ---
 title: Mentoring in Open Source
+date: 2023-08-30T23:09:00.000-07:00
 tags:
   - gnome
   - gsoc

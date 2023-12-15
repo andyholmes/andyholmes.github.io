@@ -4,6 +4,17 @@ const pluginRss = require('@11ty/eleventy-plugin-rss');
 const pluginSyntaxHighlight = require('@11ty/eleventy-plugin-syntaxhighlight');
 const markdownItAnchor = require('markdown-it-anchor');
 
+/**
+ * Get a list of all posts, sorted by ascending date.
+ *
+ * @returns {object[]} - a list of posts
+ */
+function getPosts(collection) {
+    return [
+        ...collection.getFilteredByGlob('./src/posts/*.md'),
+        ...collection.getFilteredByGlob('./src/posts/*/*.md'),
+    ].sort((a, b) => a.date - b.date);
+}
 
 module.exports = function(eleventyConfig) {
     eleventyConfig.addPassthroughCopy({
@@ -36,7 +47,7 @@ module.exports = function(eleventyConfig) {
 
     // Posts
     eleventyConfig.addCollection('posts', (collection) => {
-        return collection.getFilteredByGlob('./src/posts/*.md').map(page => {
+        return getPosts(collection).map(page => {
             page.data.layout = 'post';
 
             /* FIXME: this chokes up in GitHub's CI
@@ -49,13 +60,13 @@ module.exports = function(eleventyConfig) {
     });
 
     eleventyConfig.addCollection('gnome', (collection) => {
-        return collection.getFilteredByGlob('./src/posts/*.md').filter(page => {
+        return getPosts(collection).filter(page => {
             return !page.data?.tags?.includes('personal');
         });
     });
 
     eleventyConfig.addCollection('latest', (collection) => {
-        return collection.getFilteredByGlob('./src/posts/*.md')
+        return getPosts(collection)
             .reverse()
             .slice(0, 5 /* Latest */);
     });

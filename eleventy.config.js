@@ -17,6 +17,8 @@ function getPosts(collection) {
 }
 
 module.exports = function(eleventyConfig) {
+    eleventyConfig.addPassthroughCopy('**/*.jpg');
+    eleventyConfig.addPassthroughCopy('**/*.png');
     eleventyConfig.addPassthroughCopy({
         './src/assets': '/assets',
         './src/CNAME': '/CNAME',

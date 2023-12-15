@@ -28,12 +28,12 @@ This work was a multi-phase community effort and the majority of the work as
 part of the STF was adding and testing more thorough and resuable code for DAV
 discovery and configuration.
 
-![A screenshot of a WebDAV account sign-in form](/assets/images/goa-and-stf-part-1/webdav-setup.png)
+![A screenshot of a WebDAV account sign-in form](webdav-setup.png)
 
 The new WebDAV provider then became a base for the Nextcloud provider, which is
 now simply a branded version.
 
-![A screenshot of a Nextcloud account page](/assets/images/goa-and-stf-part-1/nextcloud-details.png)
+![A screenshot of a Nextcloud account page](nextcloud-details.png)
 
 Another big step to improving reliability and maintainability is updating to
 the latest dependencies and industry conventions. This meant first
@@ -42,7 +42,7 @@ a Google account you're doing it with your preferred, trusted browser. This
 allowed us to remove the old WebKit2 dependency and
 [port to GTK4 and libadwaita].
 
-![A screenshot of a browser redirection dialog](/assets/images/goa-and-stf-part-1/oauth2-setup.png)
+![A screenshot of a browser redirection dialog](oauth2-setup.png)
 
 Although the user interface for adding an account is simple, each account type
 needs its own, so GNOME Online Accounts has traditionally had a strange API and
@@ -51,7 +51,7 @@ really didn't work out. Nowadays we often approach user tasks like
 *"Pick a File"* with simple task-based APIs and now GNOME Online Accounts does,
 too.
 
-![Side-by-side screenshots of a sign-in form using GTK3 and GTK4](/assets/images/goa-and-stf-part-1/webdav-setup-comparison.png)
+![Side-by-side screenshots of a sign-in form using GTK3 and GTK4](webdav-setup-comparison.png)
 
 [supporting OAuth 2.0]: https://gitlab.gnome.org/GNOME/gnome-online-accounts/-/merge_requests/139
 [general WebDAV provider merged]: https://gitlab.gnome.org/GNOME/gnome-online-accounts/-/merge_requests/137

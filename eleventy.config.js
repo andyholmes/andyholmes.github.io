@@ -50,7 +50,7 @@ module.exports = function(eleventyConfig) {
 
     eleventyConfig.addCollection('gnome', (collection) => {
         return collection.getFilteredByGlob('./src/posts/*.md').filter(page => {
-            return !page.data.tags.includes('personal');
+            return !page.data?.tags?.includes('personal');
         });
     });
 

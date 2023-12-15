@@ -1,5 +1,6 @@
 ---
 title: GNOME Online Account and the STF
+date: 2023-12-15T10:27:00.000-08:00
 tags:
   - gnome
   - sso

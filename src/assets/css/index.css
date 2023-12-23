@@ -165,6 +165,12 @@ footer > .content {
   visibility: visible;
 }
 
+@media (max-width: 768px) {
+  img {
+    width: 100%;
+  }
+}
+
 /*
  * Theme
  */

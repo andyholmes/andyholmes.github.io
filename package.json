@@ -9,10 +9,11 @@
         "serve": "npx @11ty/eleventy --serve",
         "test": "eslint ."
     },
+    "type": "module",
     "devDependencies": {
-        "@11ty/eleventy": "^2.0.0",
-        "@11ty/eleventy-plugin-bundle": "^1.0.0",
-        "@11ty/eleventy-plugin-rss": "^1.2.0",
+        "@11ty/eleventy": "^3.0.0-alpha.12",
+        "@11ty/eleventy-plugin-bundle": "^2.0.0",
+        "@11ty/eleventy-plugin-rss": "^2.0.0-beta.7",
         "@11ty/eleventy-plugin-syntaxhighlight": "^5.0.0",
         "eslint": "^9.0.0",
         "markdown-it-anchor": "^9.0.1"

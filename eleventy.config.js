@@ -1,8 +1,8 @@
-const { EleventyHtmlBasePlugin } = require('@11ty/eleventy');
-const pluginBundle = require('@11ty/eleventy-plugin-bundle');
-const pluginRss = require('@11ty/eleventy-plugin-rss');
-const pluginSyntaxHighlight = require('@11ty/eleventy-plugin-syntaxhighlight');
-const markdownItAnchor = require('markdown-it-anchor');
+import { EleventyHtmlBasePlugin } from '@11ty/eleventy';
+import bundlePlugin from '@11ty/eleventy-plugin-bundle';
+import rssPlugin from '@11ty/eleventy-plugin-rss';
+import syntaxHighlightPlugin from '@11ty/eleventy-plugin-syntaxhighlight';
+import markdownItAnchor from 'markdown-it-anchor';
 
 /**
  * Get a list of all posts, sorted by ascending date.
@@ -16,7 +16,7 @@ function getPosts(collection) {
     ].sort((a, b) => a.date - b.date);
 }
 
-module.exports = function(eleventyConfig) {
+export default function(eleventyConfig) {
     eleventyConfig.addPassthroughCopy('./src/**/*.jpg');
     eleventyConfig.addPassthroughCopy('./src/**/*.png');
     eleventyConfig.addPassthroughCopy('./src/**/*.svg');
@@ -30,9 +30,9 @@ module.exports = function(eleventyConfig) {
 
     // Plugins
     eleventyConfig.addPlugin(EleventyHtmlBasePlugin);
-    eleventyConfig.addPlugin(pluginBundle);
-    eleventyConfig.addPlugin(pluginRss);
-    eleventyConfig.addPlugin(pluginSyntaxHighlight, {
+    eleventyConfig.addPlugin(bundlePlugin);
+    eleventyConfig.addPlugin(rssPlugin);
+    eleventyConfig.addPlugin(syntaxHighlightPlugin, {
         preAttributes: { tabindex: 0 },
         templateFormats: ['md'],
     });
@@ -47,7 +47,7 @@ module.exports = function(eleventyConfig) {
     });
 
     eleventyConfig.addFilter('htmlDateString', (date) => {
-        return pluginRss.dateToRfc822(date);
+        return rssPlugin.dateToRfc822(date);
     });
 
     // Posts

@@ -57,6 +57,7 @@ main a:hover {
 
 main > .content {
   font-size: 13pt;
+  line-height: 1.5;
   padding: 1rem;
   flex-grow: 1;
 }

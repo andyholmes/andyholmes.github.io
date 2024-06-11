@@ -20,6 +20,8 @@ module.exports = function(eleventyConfig) {
     eleventyConfig.addPassthroughCopy('./src/**/*.jpg');
     eleventyConfig.addPassthroughCopy('./src/**/*.png');
     eleventyConfig.addPassthroughCopy('./src/**/*.svg');
+    eleventyConfig.addPassthroughCopy('./src/**/*.vtt');
+    eleventyConfig.addPassthroughCopy('./src/**/*.webm');
     eleventyConfig.addPassthroughCopy({
         './src/assets': '/assets',
         './src/CNAME': '/CNAME',

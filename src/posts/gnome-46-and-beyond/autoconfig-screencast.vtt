@@ -1,0 +1,14 @@
+WEBVTT
+
+1
+00:00.000 --> 00:03.000
+A setup dialog titled "Email" with two visible sections. The first has entries for Name, Email and Password, the second has the heading "IMAP Settings" and entries for Server, Username and Password.
+
+2
+00:03.000 --> 00:07.000
+While the email address is entered the autoconfig runs automatically, displaying a progress spinner in the entry.
+
+3
+00:07.000 --> 00:09.000
+The server settings are pre-filled and "IMAP Settings" heading displays a green check mark with the label "Auto-detected".
+

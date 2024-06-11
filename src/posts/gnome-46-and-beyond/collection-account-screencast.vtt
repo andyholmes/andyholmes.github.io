@@ -1,0 +1,18 @@
+WEBVTT
+
+1
+00:00.000 --> 00:03.000
+A setup dialog titled "Collection" with two sections. The first has entries for Email and Password, the second has status rows for Mail, Calendar, Contacts and Files.
+
+2
+00:03.000 --> 00:09.000
+While the email address is entered the autoconfig runs automatically, displaying a progress spinner in the entry.
+
+3
+00:12.000 --> 00:14.000
+The status rows display a green check mark indicating the service has been found.
+
+4
+00:14.000 --> 00:12.000
+Selecting one of the rows opens a setup page with the server settings pre-filled.
+

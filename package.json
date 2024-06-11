@@ -11,7 +11,7 @@
     },
     "devDependencies": {
         "@11ty/eleventy": "^2.0.0",
-        "@11ty/eleventy-plugin-bundle": "^1.0.0",
+        "@11ty/eleventy-plugin-bundle": "^2.0.2",
         "@11ty/eleventy-plugin-rss": "^1.2.0",
         "@11ty/eleventy-plugin-syntaxhighlight": "^5.0.0",
         "eslint": "^8.46.0",

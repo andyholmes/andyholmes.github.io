@@ -26,6 +26,7 @@ export default function(eleventyConfig) {
         './src/assets': '/assets',
         './src/CNAME': '/CNAME',
         './src/favicon.ico': '/favicon.ico',
+        './public': '/public',
     });
 
     // Plugins

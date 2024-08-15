@@ -76,10 +76,7 @@ export default function(eleventyConfig) {
     });
 
     eleventyConfig.addFilter('excerpt', (content) => {
-        const marker = '</p>';
-        const position = content?.indexOf(marker);
-
-        return position >= 0 ? content.slice(0, position + marker.length) : '';
+        return content.match(/<p>\s*(.*?)\s*<\/p>/s)?.[1];
     });
 
     // Tags

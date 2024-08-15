@@ -77,13 +77,11 @@ export default function(eleventyConfig) {
             .slice(0, 5 /* Latest */);
     });
 
-    eleventyConfig.addShortcode('excerpt', (item) => {
-        const separator = '</p>';
-        const position = item.templateContent?.indexOf(separator);
+    eleventyConfig.addFilter('excerpt', (content) => {
+        const marker = '</p>';
+        const position = content?.indexOf(marker);
 
-        return position >= 0
-            ? item.templateContent.slice(0, position + separator.length)
-            : '';
+        return position >= 0 ? content.slice(0, position + marker.length) : '';
     });
 
     // Tags

@@ -209,6 +209,12 @@ kbd {
   color: currentColor;
 }
 
+figcaption {
+  font-size: smaller;
+  font-style: italic;
+  text-align: center;
+}
+
 @media (prefers-color-scheme: light) {
   body {
     background-color: var(--dark-background);

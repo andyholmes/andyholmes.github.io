@@ -3,23 +3,24 @@ permalink: /feed.xml
 eleventyExcludeFromCollections: true
 ---
 <?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<rss version="2.0" xml:base="{{ metadata.url | addPathPrefixToFullUrl }}" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:dc="http://purl.org/dc/elements/1.1/">
   <channel>
     <title>{{ metadata.title }}</title>
     <description>{{ metadata.description }}</description>
+    <language>{{ metadata.language or page.lang }}</language>
     <link>{{ metadata.url | addPathPrefixToFullUrl }}</link>
-    <atom:link href="{{ permalink | absoluteUrl(metadata.url) }}" rel="self" type="application/rss+xml"/>
+    <atom:link href="{{ permalink | htmlBaseUrl(metadata.url) }}" rel="self" type="application/rss+xml" />
     <pubDate>{{ collections.posts | getNewestCollectionItemDate | dateToRfc822 }}</pubDate>
     <lastBuildDate>{{ collections.posts | getNewestCollectionItemDate | dateToRfc822 }}</lastBuildDate>
-    <generator>11ty 2.0.1</generator>
     {%- for post in collections.posts | reverse %}
-    {% set absolutePostUrl = post.url | absoluteUrl(metadata.url) %}
+    {%- set absolutePostUrl = post.url | htmlBaseUrl(metadata.url) %}
     <item>
       <title>{{ post.data.title }}</title>
-      <description>{{ post.templateContent | htmlToAbsoluteUrls(absolutePostUrl) }}</description>
+      <description>{{ post.content | renderTransforms(post.data.page, metadata.url) }}</description>
       <pubDate>{{ post.date | dateToRfc822 }}</pubDate>
+      <dc:creator>{{ metadata.author.name }}</dc:creator>
       <link>{{ absolutePostUrl }}</link>
-      <guid isPermaLink="true">{{ absolutePostUrl }}</guid>
+      <guid>{{ absolutePostUrl }}</guid>
       {% for cat in post.categories %}
       <category>{{ cat | xml_escape }}</category>
       {% endfor %}

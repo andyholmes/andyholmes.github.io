@@ -47,9 +47,7 @@ export default function(eleventyConfig) {
         });
     });
 
-    eleventyConfig.addFilter('htmlDateString', (date) => {
-        return rssPlugin.dateToRfc822(date);
-    });
+    eleventyConfig.addFilter('htmlDateString', rssPlugin.dateToRfc822);
 
     // Posts
     eleventyConfig.addCollection('posts', (collection) => {

@@ -1,6 +1,6 @@
 ---
 title: Best Intentions
-date: 2024-08-19T16:32:00.000-08:00
+date: 2024-08-19T16:32:00.000-07:00
 tags:
   - gnome
   - xdg

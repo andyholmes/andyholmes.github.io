@@ -15,7 +15,7 @@
         "@11ty/eleventy-plugin-bundle": "^3.0.1",
         "@11ty/eleventy-plugin-rss": "^2.0.3",
         "@11ty/eleventy-plugin-syntaxhighlight": "^5.0.0",
-        "eslint": "^9.23.0",
+        "eslint": "^9.24.0",
         "markdown-it-anchor": "^9.2.0"
     }
 }

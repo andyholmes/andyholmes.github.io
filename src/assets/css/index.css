@@ -215,6 +215,13 @@ figcaption {
   text-align: center;
 }
 
+blockquote {
+  font-style: italic;
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 0.5em;
+  padding: 0.125em 1em;
+}
+
 @media (prefers-color-scheme: light) {
   body {
     background-color: var(--dark-background);
